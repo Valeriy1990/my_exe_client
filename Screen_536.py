@@ -10,6 +10,7 @@ from kivy.network.urlrequest import UrlRequest
 from kivy.clock import Clock
 
 import matplotlib.pyplot as plt
+import pickle
 import logging
 from datetime import datetime
 import json
@@ -24,14 +25,20 @@ class Screen_536(MDScreen):
     
     def __init__(self, **kwargs):      # на этом экране я делаю все то же самое, что и на главном экране, чтобы иметь возможность переключаться вперед и назад
         super(Screen_536, self).__init__(**kwargs)
-        self.i = 1
 
         """Логика POST запроса на сервер с помощью асинхронного UrlRequest"""
         def on_confirm(self):
-
+            
+            """В случае успеха создаётся файл pickle с записью даты в виде строки и выполняется функция checkbox1_state"""
             def success(req, result):
+                global room_536
                 logger.info(f'Данные отправленны!!. Result: {result}. Поздравляю!!')
-                checkbox1.state = 'normal'  #  Реакция смайла 
+                flag = {"room_536": str(datetime.now())}
+                with open('server_for_app/data_states.pickle', 'wb') as f:
+                    first = pickle.dumps(flag)
+                    f.write(first)
+                logger.info(f'Появился pickle!')
+                checkbox1_state(self)
 
             def failure(req, result):
                 logger.info(f'Данные обработаны. Но есть нюанс: {result}')
@@ -116,6 +123,23 @@ class Screen_536(MDScreen):
             if humidity_text.text == '':
                 humidity_text.helper_text = ''   
 
+        '''Реакция смайла на pickle'''
+        def checkbox1_state(self):
+            global room_536
+            try:
+                with open('server_for_app/data_states.pickle', 'rb') as f:
+                    logger.info(f'Считывание pickle!')
+                    first = f.read()
+                    flag = pickle.loads(first)
+                    tap_flag = flag["room_536"]
+            except FileNotFoundError:
+                pass
+            logger.info(f'Проверка условия для смайла')
+            if not tap_flag or datetime.fromisoformat(tap_flag).date() != datetime.now().date():
+                checkbox1.state = 'down'    #  Реакция смайла 
+            else:
+                checkbox1.state = 'normal'  #  Реакция смайла 
+
         """Основной макет скрина
         Без него topbar спустится вниз"""
         second_layout = MDBoxLayout(orientation="vertical")  
@@ -186,7 +210,7 @@ class Screen_536(MDScreen):
                              state = 'down',
                              background_checkbox_disabled_down="images/()().png",
                              background_checkbox_disabled_normal="images/Троль.png")
-
+        
         second_layout.add_widget(topbar)
         second_layout.add_widget(content)
         content.add_widget(progress)
@@ -198,13 +222,16 @@ class Screen_536(MDScreen):
 
         """Периодическая активация exist"""
         Clock.schedule_interval(exist, 1/60)
+
+        # """Периодическая смена смайла через 12 часов"""
+        # Clock.schedule_interval(exist1, 3600*12/60)
         
-    def graf(self, *args):
-        plt.plot(data_549_mean) # Построим простой график температур
-        plt.ylabel('humidity_549')
-        plt.legend(['humidity_549','temperature_549'], loc='upper left')
-        plt.show()
-        return
+    # def graf(self, *args):
+    #     plt.plot(data_549_mean) # Построим простой график температур
+    #     plt.ylabel('humidity_549')
+    #     plt.legend(['humidity_549','temperature_549'], loc='upper left')
+    #     plt.show()
+    #     return
 
     def to_main_scrn(self, *args):  # Вместе с нажатием кнопки он передает информацию о себе.
         # Чтобы не выдать ошибку, я добавляю в функцию *args
