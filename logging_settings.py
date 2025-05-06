@@ -1,0 +1,47 @@
+import sys
+
+from log_filters import CriticalLogFilter
+
+
+logging_config = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'default': {
+            'format': '--> [%(levelname)-8s] - %(name)s:%(funcName)s - %(message)s'
+        },
+        'formatter_1': {
+            'format': '--> [%(levelname)-8s] - [Line %(lineno)d : def %(funcName)s : %(filename)s] - %(message)s'
+        }
+    },
+    'handlers': {
+        'default': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'default'
+        },
+        'stdout': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'formatter_1',
+            'stream': sys.stdout
+        },
+
+    },
+    'loggers': {
+        'MainScreen': {
+            'level': 'INFO',
+            'handlers': ['stdout']
+        }
+
+    },
+    'loggers': {
+        'Screen_536': {
+            'level': 'INFO',
+            'handlers': ['stdout']
+        }
+
+    },
+    'root': {
+        'formatter': 'default',
+        'handlers': ['default']
+    }
+}
