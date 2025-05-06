@@ -24,7 +24,6 @@ class Screen_536(MDScreen):
     
     def __init__(self, **kwargs):      # на этом экране я делаю все то же самое, что и на главном экране, чтобы иметь возможность переключаться вперед и назад
         super(Screen_536, self).__init__(**kwargs)
-        self.i = 1
 
         """Логика POST запроса на сервер с помощью асинхронного UrlRequest"""
         def on_confirm(self):
