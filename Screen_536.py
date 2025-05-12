@@ -7,9 +7,9 @@ from kivymd.uix.screen import MDScreen
 from kivymd.uix.progressbar import MDProgressBar
 from kivy.uix.checkbox import CheckBox
 from kivy.network.urlrequest import UrlRequest
-from kivy.clock import Clock
+from kivy.clock import Clock, mainthread
 
-import matplotlib.pyplot as plt
+import requests
 import pickle
 import logging
 from datetime import datetime
@@ -22,47 +22,73 @@ logger = logging.getLogger(__name__)
 
 class Screen_536(MDScreen):
     '''здесь я создаю второй экран с именем Screen_536'''
-    
+        
     def __init__(self, **kwargs):      # на этом экране я делаю все то же самое, что и на главном экране, чтобы иметь возможность переключаться вперед и назад
         super(Screen_536, self).__init__(**kwargs)
 
         """Логика POST запроса на сервер с помощью асинхронного UrlRequest"""
         def on_confirm(self):
-            
+            data = {"humidity": humidity_text.text, "temperature": temperature_text.text, "creation_date": str(datetime.now())}
+            data = json.dumps(data)
+
             """В случае успеха создаётся файл pickle с записью даты в виде строки и выполняется функция checkbox1_state"""
+            @mainthread
             def success(req, result):
                 global room_536
                 logger.info(f'Данные отправленны!!. Result: {result}. Поздравляю!!')
                 flag = {"room_536": str(datetime.now())}
-                with open('server_for_app/data_states.pickle', 'wb') as f:
+                with open('my_exe_client/data_states.pickle', 'wb') as f:
                     first = pickle.dumps(flag)
                     f.write(first)
                 logger.info(f'Появился pickle!')
                 checkbox1_state(self)
 
+            """В случае неудачной передачи на сервер"""
+            @mainthread
+            def on_error(req, error):
+                logger.info(f"Ошибка: {error}")
+                error_text.hint_text = 'Нет связи с сервером'
+
+            """Данные на сервер на сервер переданы, но есть проблема"""
+            @mainthread
             def failure(req, result):
                 logger.info(f'Данные обработаны. Но есть нюанс: {result}')
+                error_text.hint_text = str(result)
 
+            """Проверка наличия интернета"""
+            def is_network_available():
+                logger.info(f'Проверка наличия интернета')
+                try:
+                    response = requests.head("http://www.google.com", timeout=5)
+                    logger.info(f'Интернет есть')
+                    return response.status_code == 200
+                except:
+                    return False
+        
+            '''Полоса прогресса'''
             def post_progress(req, current_size, total_size):
                 #  current_size текущий размер
                 #  total_size общий размер
                 progress.value = (total_size - current_size) / total_size
-                logger.info(f'полоса прогресса: {progress.value}')     
+                logger.info(f'полоса прогресса: {progress.value}')   
 
+            def load():          
+                logger.info(f'Попытка отправить запрос на сервер')    
+                if is_network_available():
+                    error_text.hint_text = 'Идёт загрузка...'
+                    logger.error(f'Загрузка на сервер')
+                    req = UrlRequest('http://192.168.1.33:8066/setdata/', 
+                                    req_body=data, 
+                                    on_success=success, 
+                                    on_failure=failure,
+                                    on_progress=post_progress,
+                                    on_error=on_error)
+                else:
+                    logger.error(f'Интернета нет')
+                    error_text.hint_text = "Нет подключения к сети. Попробуем позже..."
+                    Clock.schedule_once(lambda dt: load(), 5) # Повторная попытка через 5 секунд
 
-            data = {"humidity": humidity_text.text, "temperature": temperature_text.text, "creation_date": str(datetime.now())}
-            data = json.dumps(data)
-
-            logger.info(f'Попытка отправить запрос на сервер')
-
-            try:
-                req = UrlRequest('http://192.168.1.33:8066/setdata/', 
-                                 req_body = data, 
-                                 on_success=success, 
-                                 on_failure=failure,
-                                 on_progress=post_progress)
-            except:
-                logger.error(f'Ошибка. Что-то не так')
+            load()
 
         """Валидация параметров ввода влажности и смена фокуса на температуру"""
         def on_error_humaditi(self):
@@ -127,7 +153,7 @@ class Screen_536(MDScreen):
         def checkbox1_state(self):
             global room_536
             try:
-                with open('server_for_app/data_states.pickle', 'rb') as f:
+                with open('my_exe_client/data_states.pickle', 'rb') as f:
                     logger.info(f'Считывание pickle!')
                     first = f.read()
                     flag = pickle.loads(first)
@@ -142,7 +168,7 @@ class Screen_536(MDScreen):
 
         """Основной макет скрина
         Без него topbar спустится вниз"""
-        second_layout = MDBoxLayout(orientation="vertical")  
+        layout = MDBoxLayout(orientation="vertical")  
 
         '''Создание панели инструментов в классе Screen'''
         topbar = MDTopAppBar(title=f"№ 536 'Входной материальный шлюз'",
@@ -196,6 +222,22 @@ class Screen_536(MDScreen):
                                  disabled=False,
                                  on_press=on_confirm)
         
+        '''Лейбл возврата ошибок'''
+        error_text = MDTextField(size_hint=(0.4, None),
+                                 pos_hint={"center_x": 0.5, "center_y": 0.2},
+                                 mode="line",
+                                 hint_text="",
+                                 hint_text_color_normal = my_color,
+                                 icon_left_color_normal = my_color,
+                                 max_text_length=16,
+                                 active_line=False,
+                                 allow_copy=False,
+                                 base_direction="ltr",
+                                 cursor_blink=True,
+                                 icon_left="",
+                                 readonly=True)  
+        
+
         """Строка прогресса"""
         progress = MDProgressBar(value=0.2,
                                  max=1,
@@ -211,27 +253,18 @@ class Screen_536(MDScreen):
                              background_checkbox_disabled_down="images/()().png",
                              background_checkbox_disabled_normal="images/Троль.png")
         
-        second_layout.add_widget(topbar)
-        second_layout.add_widget(content)
+        layout.add_widget(topbar)
+        layout.add_widget(content)
         content.add_widget(progress)
         content.add_widget(checkbox1)
         self.add_widget(humidity_text)
         self.add_widget(temperature_text)
+        self.add_widget(error_text)        
         self.add_widget(confirm)
-        self.add_widget(second_layout) 
+        self.add_widget(layout) 
 
         """Периодическая активация exist"""
         Clock.schedule_interval(exist, 1/60)
-
-        # """Периодическая смена смайла через 12 часов"""
-        # Clock.schedule_interval(exist1, 3600*12/60)
-        
-    # def graf(self, *args):
-    #     plt.plot(data_549_mean) # Построим простой график температур
-    #     plt.ylabel('humidity_549')
-    #     plt.legend(['humidity_549','temperature_549'], loc='upper left')
-    #     plt.show()
-    #     return
 
     def to_main_scrn(self, *args):  # Вместе с нажатием кнопки он передает информацию о себе.
         # Чтобы не выдать ошибку, я добавляю в функцию *args

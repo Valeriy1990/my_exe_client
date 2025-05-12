@@ -1,8 +1,8 @@
 
 from kivy.app import App
-from kivy.clock import Clock
+from kivy.clock import Clock, mainthread
 from kivy.uix.scrollview import ScrollView
-
+from kivy.network.urlrequest import UrlRequest
 from kivymd.app import MDApp
 from kivymd.uix.button import MDRectangleFlatButton, MDIconButton, MDFloatingActionButton
 from kivymd.uix.boxlayout import MDBoxLayout
@@ -11,6 +11,9 @@ from kivymd.uix.screen import MDScreen
 from kivymd.uix.navigationrail import MDNavigationRail, MDNavigationRailItem
 
 from environs import Env
+import datetime
+import pickle
+import requests
 import logging
 from ccolor import *
 
@@ -20,47 +23,47 @@ env.read_env(r'C:\Users\vbekr\OneDrive\Рабочий стол\Python\my_exe_cli
 login = env('login')  # Получаем и сохраняем значение переменной окружения в переменную
 Password = env('Password')  
 
-# login = {'Valeriy': 'aibaibaib'}
+# login = {'Valeriy': '1111'}
 
 logger = logging.getLogger(__name__)
 
 class MainScreen(MDScreen):
     '''здесь я создаю первый экран с именем MainScreen'''
-    access = True # Поставить на False
+    access = False # Поставить на False
     
     def __init__(self, **kwargs):
         super(MainScreen, self).__init__(**kwargs)     
+
+        """Проверка сервера в сети"""
+        def on_server(self):
+
+            logger.info(f'Проверка наличия сервера в сети')
+            try:
+                response = requests.head('http://192.168.1.33:8066/hello/',
+                                    timeout=5)
+                logger.info(response.status_code)
+                text_server.hint_text = 'Cервер на связи'
+            except:
+                text_server.hint_text = 'Нет связи с сервером'
 
         '''Завершить приложение'''
         def stop_program(self):
             logger.info('Успешный выход из программы. Ты великолепен!!')
             App.get_running_app().stop()
 
-        '''Валидация логина'''
-        def on_error(self):
-            if len(text_field2.text) < 8:
-                text_field2.error = True
-                text_field2.text_validate_unfocus = False
-            else:
-                text_field2.text_validate_unfocus = True
-            if ((len(text_field1.text) > 0) and not text_field1.error):
-                confirm.disabled = False
-            else:
-                confirm.disabled = True
-
         """Если текст логина введён в нужном формате, фокус сменяется на пароль"""
         def next_field(self):
             logger.info('Смена фокуса с логина на пароль')
-            if text_field1.focus == True:
-                text_field2.focus = True
+            if text_login.focus == True:
+                text_passrd.focus = True
 
         '''Скрыть/показать пароль'''
         def show_password(self):
-            if text_field1.password == True:
-                text_field1.password = False
+            if text_passrd.password == True:
+                text_passrd.password = False
                 self.icon = "eye-off-outline"
             else:
-                text_field1.password = True
+                text_passrd.password = True
                 self.icon = "eye-outline"
 
         '''Сброс авторизации'''
@@ -72,28 +75,28 @@ class MainScreen(MDScreen):
         '''Авторизация'''
         def on_confirm(self):
             try:
-                if login == text_field2.text and Password == text_field1.text:
-                    text_field0.hint_text = text_field2.text
-                    text_field1.text = ""
-                    text_field2.text = ""
+                if login == text_login.text and Password == text_passrd.text:
+                    text_field0.hint_text = text_login.text
+                    text_passrd.text = ""
+                    text_login.text = ""
                     MainScreen.access = True
                     logger.info('Авторизация прошла успешно')
 
                 else:
                     text_field0.hint_text = "Введите логин и пароль"
-                    text_field1.text = ''
-                    text_field2.text = ''
+                    text_passrd.text = ''
+                    text_login.text = ''
                     MainScreen.access = False
                     logger.info('Неверный пароль')
             except:
                 text_field0.hint_text = "Введите логин и пароль"
-                text_field1.text = ''
-                text_field2.text = ''
+                text_passrd.text = ''
+                text_login.text = ''
                 MainScreen.access = False
                 logger.debug('Ошибка авторизации')     
         
-        '''Периодическая активация функции on_error'''
-        Clock.schedule_interval(on_error, 1/5)
+        # '''Периодическая активация функции on_error'''
+        # Clock.schedule_interval(on_error, 1/5)
 
         '''Панель с помещениями'''
         panel = MDNavigationRail(    
@@ -147,10 +150,29 @@ class MainScreen(MDScreen):
                     current_selected_item=1,
                     size_hint = (None, None),)
 
+        '''Реакция смайла на pickle'''
+        def checkbox_536_state(self):
+            global room_536
+            try:
+                with open('my_exe_client/data_states.pickle', 'rb') as f:
+                    logger.info(f'Считывание pickle!')
+                    first = f.read()
+                    flag = pickle.loads(first)
+                    tap_flag = flag["room_536"]
+            except FileNotFoundError:
+                pass
+            logger.info(f'Проверка свежих данных на помещении')
+            if not tap_flag or datetime.fromisoformat(tap_flag).date() != datetime.now().date():
+                # badge_icon="exclamation-thick"  
+                pass
+            else:
+            #     badge_icon="" 
+                pass
+
         panel.height = 17 * 56 + 20
     
         '''Лейбл логин'''
-        text_field2 = MDTextField(size_hint=(0.4, None),
+        text_login = MDTextField(size_hint=(0.4, None),
                                  pos_hint={"center_x": 0.5, "center_y": 0.8},
                                  mode="rectangle",
                                  hint_text="Никнейм",
@@ -159,7 +181,6 @@ class MainScreen(MDScreen):
                                  max_text_length=16,
                                  error_color = blue,
                                  text_color_normal = blue,
-                                 active_line=True,
                                  allow_copy=False,
                                  base_direction="ltr",
                                  cursor_blink=True,
@@ -169,7 +190,7 @@ class MainScreen(MDScreen):
                                  fill_color_normal=green)
         
         '''Лейбл пароль'''
-        text_field1 = MDTextField(size_hint=(0.4, None),
+        text_passrd = MDTextField(size_hint=(0.4, None),
                                   pos_hint={"center_x": 0.5, "center_y": 0.68},
                                   mode="rectangle",
                                   hint_text="Пароль",
@@ -199,15 +220,36 @@ class MainScreen(MDScreen):
         """Кнопка 'продолжить' после логина и пароля"""
         confirm = MDRectangleFlatButton(text="Продолжить",
                                     pos_hint={"center_x": 0.5, "center_y": 0.2},
-                                    disabled=True,
                                     on_press=on_confirm)
+
+        '''Лейбл связи с сервером'''
+        text_server = MDTextField(size_hint=(0.4, None),
+                                 pos_hint={"center_x": 0.5, "center_y": 0.1},
+                                 mode="line",
+                                 hint_text="",
+                                 hint_text_color_normal = my_color,
+                                 icon_left_color_normal = my_color,
+                                 max_text_length=16,
+                                 active_line=True,
+                                 allow_copy=False,
+                                 base_direction="ltr",
+                                 cursor_blink=True,
+                                 icon_left="",
+                                 readonly=True)
 
         '''Кнопка выхода из приложения'''
         exit_button = MDFloatingActionButton(icon="exit-run",
                                       md_bg_color = (0, 1, 0.7, 0.7),
                                       icon_color=(1, 1, 1, 1),
-                                      pos_hint={"center_x": 0.15, "center_y": 0.1},
+                                      pos_hint={"center_x": 0.15, "center_y": 0.08},
                                       on_press=stop_program)
+        
+        '''Кнопка подключения к серверу'''
+        server_button = MDFloatingActionButton(icon="connection",
+                                      md_bg_color = (0, 1, 0.7, 0.7),
+                                      icon_color=(1, 1, 1, 1),
+                                      pos_hint={"center_x": 0.15, "center_y": 0.18},
+                                      on_press=on_server)
 
         '''Создание пустого макета, не привязанного к экрану'''
         main_layout = MDBoxLayout(orientation="vertical")   
@@ -225,10 +267,12 @@ class MainScreen(MDScreen):
         self.add_widget(ml)
         
         self.add_widget(text_field0)
-        self.add_widget(text_field1)
-        self.add_widget(text_field2)
+        self.add_widget(text_passrd)
+        self.add_widget(text_login)
+        self.add_widget(text_server)        
         
         self.add_widget(confirm)
+        self.add_widget(server_button)
         self.add_widget(exit_button)
         self.add_widget(eye_outline)
         self.add_widget(main_layout)
