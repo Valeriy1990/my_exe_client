@@ -5,7 +5,7 @@ from kivymd.app import MDApp
 from kivymd.uix.screenmanager import MDScreenManager
 
 from MainScreen import MainScreen
-from Screen_536 import Screen_536
+from Screen import Screen
 
 
 class MainApp(MDApp):
@@ -18,7 +18,7 @@ class MainApp(MDApp):
         self.theme_cls.theme_style = "Dark"
         sm = MDScreenManager()  # Необходимо создать переменную manager, которая будет собирать экраны и управлять ими
         sm.add_widget(MainScreen(name='Main'))  # Установка значения имени экрана для менеджера экранов
-        sm.add_widget(Screen_536(name='Screen_536'))
+        sm.add_widget(Screen(name='Screen'))
 
         return sm  # Тут я возвращаю менедежер, что бы работать с ним
     

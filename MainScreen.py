@@ -11,17 +11,18 @@ from kivymd.uix.screen import MDScreen
 from kivymd.uix.navigationrail import MDNavigationRail, MDNavigationRailItem
 
 from environs import Env
+import json
 import datetime
 import pickle
 import requests
 import logging
 from ccolor import *
 
-env = Env()  # Создаем экземпляр класса Env
-env.read_env(r'C:\Users\vbekr\OneDrive\Рабочий стол\Python\my_exe_client\inter.env') # Методом read_env() читаем файл .env и загружаем из него переменные в окружение
+# env = Env()  # Создаем экземпляр класса Env
+# env.read_env(r'C:\Users\vbekr\OneDrive\Рабочий стол\Python\my_exe_client\inter.env') # Методом read_env() читаем файл .env и загружаем из него переменные в окружение
                           
-login = env('login')  # Получаем и сохраняем значение переменной окружения в переменную
-Password = env('Password')  
+# login = env('login')  # Получаем и сохраняем значение переменной окружения в переменную
+# password = env('password')  
 
 # login = {'Valeriy': '1111'}
 
@@ -39,12 +40,13 @@ class MainScreen(MDScreen):
 
             logger.info(f'Проверка наличия сервера в сети')
             try:
-                response = requests.head('http://192.168.1.33:8066/hello/',
+                response = requests.head('http://192.168.1.33:8066',
                                     timeout=5)
                 logger.info(response.status_code)
                 text_server.hint_text = 'Cервер на связи'
             except:
                 text_server.hint_text = 'Нет связи с сервером'
+            Clock.schedule_once(lambda dt: on_server(self), 5) # Повторная попытка через 5 секунд
 
         '''Завершить приложение'''
         def stop_program(self):
@@ -74,27 +76,78 @@ class MainScreen(MDScreen):
 
         '''Авторизация'''
         def on_confirm(self):
-            try:
-                if login == text_login.text and Password == text_passrd.text:
-                    text_field0.hint_text = text_login.text
-                    text_passrd.text = ""
-                    text_login.text = ""
-                    MainScreen.access = True
-                    logger.info('Авторизация прошла успешно')
 
-                else:
-                    text_field0.hint_text = "Введите логин и пароль"
-                    text_passrd.text = ''
-                    text_login.text = ''
-                    MainScreen.access = False
-                    logger.info('Неверный пароль')
-            except:
+            """В случае успеха"""
+            @mainthread
+            def success(req, result):
+                text_field0.hint_text = text_login.text if req._result else "Введите логин и пароль"
+                text_passrd.text = ""
+                text_login.text = ""
+                MainScreen.access = req._result
+                logger.info(f'Авторизация прошла успешно')
+
+            """В случае неудачи"""
+            @mainthread
+            def on_error(req, error):
+                text_field0.hint_text = "Сервер не отвечает"
+                text_passrd.text = ''
+                text_login.text = ''
+                MainScreen.access = req._result
+                logger.debug(f'Ошибка авторизации') 
+
+            """Данные на сервер на сервер переданы, но есть проблема"""
+            @mainthread
+            def failure(req, result):
                 text_field0.hint_text = "Введите логин и пароль"
                 text_passrd.text = ''
                 text_login.text = ''
-                MainScreen.access = False
-                logger.debug('Ошибка авторизации')     
-        
+                MainScreen.access = req._result
+                logger.debug(f'Какие-то проблемы') 
+
+            """Проверка наличия интернета"""
+            def is_network_available():
+                logger.info(f'Проверка наличия интернета')
+                try:
+                    response = requests.head("http://www.google.com", timeout=5)
+                    logger.info(f'Интернет есть')
+                    return response.status_code == 200
+                except:
+                    return False
+
+            def load():          
+                logger.info(f'Попытка отправить запрос на сервер')    
+                if is_network_available():
+                    logger.error(f'Загрузка на сервер')
+                    req = UrlRequest(f'http://192.168.1.33:8066/avt/?login={text_login.text}&password={text_passrd.text}', 
+                                    on_success=success, 
+                                    on_failure=failure,
+                                    on_error=on_error)
+                else:
+                    logger.error(f'Интернета нет')
+                    text_field0.hint_text = "Нет подключения к сети. Попробуем позже..."
+                    Clock.schedule_once(lambda dt: load(), 5) # Повторная попытка через 5 секунд
+
+            load()
+       
+        '''Реакция смайла на pickle'''
+        def checkbox_536_state(self):
+            global room_536
+            try:
+                with open('my_exe_client/data_states.pickle', 'rb') as f:
+                    logger.info(f'Считывание pickle!')
+                    first = f.read()
+                    flag = pickle.loads(first)
+                    tap_flag = flag["room_536"]
+            except FileNotFoundError:
+                pass
+            logger.info(f'Проверка свежих данных на помещении')
+            if not tap_flag or datetime.fromisoformat(tap_flag).date() != datetime.now().date():
+                # badge_icon="exclamation-thick"  
+                pass
+            else:
+            #     badge_icon="" 
+                pass
+
         # '''Периодическая активация функции on_error'''
         # Clock.schedule_interval(on_error, 1/5)
 
@@ -149,26 +202,6 @@ class MainScreen(MDScreen):
                     md_bg_color=(0.4, 0.4, 0.4, 1),
                     current_selected_item=1,
                     size_hint = (None, None),)
-
-        '''Реакция смайла на pickle'''
-        def checkbox_536_state(self):
-            global room_536
-            try:
-                with open('my_exe_client/data_states.pickle', 'rb') as f:
-                    logger.info(f'Считывание pickle!')
-                    first = f.read()
-                    flag = pickle.loads(first)
-                    tap_flag = flag["room_536"]
-            except FileNotFoundError:
-                pass
-            logger.info(f'Проверка свежих данных на помещении')
-            if not tap_flag or datetime.fromisoformat(tap_flag).date() != datetime.now().date():
-                # badge_icon="exclamation-thick"  
-                pass
-            else:
-            #     badge_icon="" 
-                pass
-
         panel.height = 17 * 56 + 20
     
         '''Лейбл логин'''
@@ -197,7 +230,7 @@ class MainScreen(MDScreen):
                                   icon_left="lock-outline",
                                   hint_text_color_normal = blue,
                                   icon_left_color_normal = blue,
-                                  helper_text="Минимальная длинна 8 символов.",
+                                  helper_text="Минимальная длина 8 символов.",
                                   helper_text_mode="on_error",
                                   password=True,
                                   password_mask="X")
@@ -279,7 +312,7 @@ class MainScreen(MDScreen):
 
     def to_second_scrn(self, *args):
         if MainScreen.access == True:
-            self.manager.current = 'Screen_536'  # Выбор экрана по имени (в данном случае по имени "Second")
+            self.manager.current = 'Screen'  # Выбор экрана по имени (в данном случае по имени "Second")
             return 0  # Не обязательно
     
 if __name__ == '__main__':

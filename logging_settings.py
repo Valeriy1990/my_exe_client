@@ -1,6 +1,6 @@
 import sys
 
-from log_filters import CriticalLogFilter
+from log_filters import CriticalLogFilter, DebugWarningLogFilter, ErrorLogFilter
 
 
 logging_config = {
@@ -34,7 +34,7 @@ logging_config = {
 
     },
     'loggers': {
-        'Screen_536': {
+        'Screen': {
             'level': 'INFO',
             'handlers': ['stdout']
         }
