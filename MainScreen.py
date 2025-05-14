@@ -9,17 +9,13 @@ from kivymd.uix.textfield import MDTextField
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.navigationrail import MDNavigationRail, MDNavigationRailItem
 
+from models import Info
 from environs import Env
-import datetime
-import pickle
 import requests
 import logging
 from ccolor import *
 
-env = Env()  # Создаем экземпляр класса Env
-env.read_env('my_exe_client\inter.env') # Методом read_env() читаем файл .env и загружаем из него переменные в окружение
-                          
-url_server = env('url')  # Получаем и сохраняем значение переменной окружения в переменную
+
 
 logger = logging.getLogger(__name__)
 
@@ -247,6 +243,7 @@ class MainScreen(MDScreen):
         @mainthread
         def success(req, result):
             self.text_field0.hint_text = self.text_login.text if req._result else "Введите логин и пароль"
+            info = Info(self.url, self.text_login.text)
             self.text_passrd.text = ""
             self.text_login.text = ""
             MainScreen.access = req._result
@@ -285,7 +282,7 @@ class MainScreen(MDScreen):
             logger.info(f'Попытка отправить запрос на сервер')    
             if is_network_available():
                 logger.error(f'Загрузка на сервер')
-                req = UrlRequest(url=f'http://{url_server}/avt/?login={self.text_login.text}&password={self.text_passrd.text}', 
+                req = UrlRequest(url=f'http://{self.url}/avt/?login={self.text_login.text}&password={self.text_passrd.text}', 
                                     on_success=success, 
                                     on_failure=failure,
                                     on_error=on_error)
@@ -327,8 +324,8 @@ class MainScreen(MDScreen):
         
         Clock.schedule_once(lambda dt: self.on_server(f'http://{self.url}/hello/'), 5) # Повторная попытка через 5 секунд
     
-    # def return_url(self):
-    #     return url_server
+    def return_url(self):
+        return self.url
 
     # '''Реакция смайла на pickle'''
     # def checkbox_536_state(self, instance):
@@ -355,5 +352,5 @@ class MainScreen(MDScreen):
             return 0  # Не обязательно
     
     
-if __name__ == '__main__':
-    MainScreen().run()
+# if __name__ == '__main__':
+#     MainScreen().run()
