@@ -9,6 +9,7 @@ from kivy.uix.checkbox import CheckBox
 from kivy.network.urlrequest import UrlRequest
 from kivy.clock import Clock, mainthread
 
+from environs import Env
 import requests
 import pickle
 import logging
@@ -17,16 +18,20 @@ import json
 
 from ccolor import *
 
+env = Env()  # Создаем экземпляр класса Env
+env.read_env('my_exe_client\inter.env') # Методом read_env() читаем файл .env и загружаем из него переменные в окружение
+                          
+url_server = env('url')  # Получаем и сохраняем значение переменной окружения в переменную
+
 logger = logging.getLogger(__name__)
 
 class Screen(MDScreen):
     '''здесь я создаю второй экран с именем Screen'''
         
-    def __init__(self, room=536, url='192.168.1.33:8066', **kwargs):      # на этом экране я делаю все то же самое, что и на главном экране, чтобы иметь возможность переключаться вперед и назад
+    def __init__(self, room=536, **kwargs):      # на этом экране я делаю все то же самое, что и на главном экране, чтобы иметь возможность переключаться вперед и назад
         super(Screen, self).__init__(**kwargs)
         self.room = room
-        self.url = url
-        
+
         '''Полоса прогресса'''
         def post_progress(req, current_size, total_size):
             #  current_size текущий размер
@@ -47,25 +52,25 @@ class Screen(MDScreen):
             logger.info(f'Появился pickle!')
             checkbox1_state(self)
 
-        """Данные на сервер на сервер переданы, но есть проблема"""
+        """Данные на сервер переданы, но есть проблема"""
         @mainthread
         def failure(req, result):
             logger.info(f'Данные обработаны. Но есть нюанс: {result}')
-            error_text.hint_text = str(result)
+            error_text.hint_text = 'Данные на сервер переданы, но есть проблема'
 
-        def load(data, url=self.url):          
+        def load(data):          
             """В случае неудачной передачи на сервер"""
             @mainthread
             def on_error(req, error):
                 logger.info(f"Ошибка: {error}")
                 error_text.hint_text = 'Нет связи с сервером'
-                Clock.schedule_once(lambda dt: load(data, url), 5) # Повторная попытка через 5 секунд
+                Clock.schedule_once(lambda dt: load(data), 5) # Повторная попытка через 5 секунд
 
             logger.info(f'Попытка отправить запрос на сервер')    
             if is_network_available():
                 error_text.hint_text = 'Идёт загрузка...'
                 logger.error(f'Загрузка на сервер')
-                req = UrlRequest(f'http://{url}/setdata/', 
+                req = UrlRequest(f'http://{url_server}/setdata/', 
                                     req_body=data, 
                                     on_success=success, 
                                     on_failure=failure,
@@ -74,23 +79,22 @@ class Screen(MDScreen):
             else:
                 logger.error(f'Интернета нет')
                 error_text.hint_text = "Нет подключения к сети. Попробуем позже..."
-                Clock.schedule_once(lambda dt: load(data, url), 5) # Повторная попытка через 5 секунд
+                Clock.schedule_once(lambda dt: load(data), 5) # Повторная попытка через 5 секунд
 
-
-            """Проверка наличия интернета"""
+        """Проверка наличия интернета"""
         def is_network_available():
             logger.info(f'Проверка наличия интернета')
             try:
-                response = requests.head("http://www.google.com", timeout=5)
+                response = requests.head("http://www.google.com")
                 logger.info(f'Интернет есть')
                 return response.status_code == 200
             except:
                 return False
 
         """Логика POST запроса на сервер с помощью асинхронного UrlRequest"""
-        def on_confirm(self):
+        def on_confirm(self):              
             data = {"humidity": humidity_text.text, "temperature": temperature_text.text, "creation_date": str(datetime.now())}
-            data = json.dumps(data)    
+            data = json.dumps(data)  
             load(data)
 
         """Валидация параметров ввода влажности и смена фокуса на температуру"""
@@ -173,13 +177,13 @@ class Screen(MDScreen):
         Без него topbar спустится вниз"""
         layout = MDBoxLayout(orientation="vertical")  
 
-        '''Создание панели инструментов в классе Screen'''
-        topbar = MDTopAppBar(title=f"№ {self.room} 'Входной материальный шлюз'",
-                             left_action_items=[["home", self.to_main_scrn]])
-
         """Второй макет скрина"""
         content = MDStackLayout(adaptive_height=False,       
                                 adaptive_width=False)
+
+        '''Создание панели инструментов в классе Screen'''
+        topbar = MDTopAppBar(title=f"№ {self.room} 'Входной материальный шлюз'",
+                             left_action_items=[["home", self.to_main_scrn]])
                    
         '''Лейбл для ввода влажности'''
         humidity_text = MDTextField(size_hint=(0.4, None),
@@ -238,8 +242,7 @@ class Screen(MDScreen):
                                  base_direction="ltr",
                                  cursor_blink=True,
                                  icon_left="",
-                                 readonly=True)  
-        
+                                 readonly=True)   
 
         """Строка прогресса"""
         progress = MDProgressBar(value=0.2,
@@ -254,8 +257,9 @@ class Screen(MDScreen):
                              disabled=True, 
                              state = 'down',
                              background_checkbox_disabled_down="images/()().png",
-                             background_checkbox_disabled_normal="images/Троль.png")
-        
+                             background_checkbox_disabled_normal="images/Троль.png")          
+
+
         layout.add_widget(topbar)
         layout.add_widget(content)
         content.add_widget(progress)
@@ -265,7 +269,6 @@ class Screen(MDScreen):
         self.add_widget(error_text)        
         self.add_widget(confirm)
         self.add_widget(layout) 
-
 
         """Периодическая активация exist"""
         Clock.schedule_interval(exist, 1/60)

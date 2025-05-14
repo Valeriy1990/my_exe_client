@@ -30,10 +30,7 @@ logging_config = {
         'MainScreen': {
             'level': 'INFO',
             'handlers': ['stdout']
-        }
-
-    },
-    'loggers': {
+        },
         'Screen': {
             'level': 'INFO',
             'handlers': ['stdout']

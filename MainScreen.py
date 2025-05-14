@@ -1,4 +1,3 @@
-
 from kivy.app import App
 from kivy.clock import Clock, mainthread
 from kivy.uix.scrollview import ScrollView
@@ -11,42 +10,47 @@ from kivymd.uix.screen import MDScreen
 from kivymd.uix.navigationrail import MDNavigationRail, MDNavigationRailItem
 
 from environs import Env
-import json
 import datetime
 import pickle
 import requests
 import logging
 from ccolor import *
 
-# env = Env()  # Создаем экземпляр класса Env
-# env.read_env(r'C:\Users\vbekr\OneDrive\Рабочий стол\Python\my_exe_client\inter.env') # Методом read_env() читаем файл .env и загружаем из него переменные в окружение
+env = Env()  # Создаем экземпляр класса Env
+env.read_env('my_exe_client\inter.env') # Методом read_env() читаем файл .env и загружаем из него переменные в окружение
                           
-# login = env('login')  # Получаем и сохраняем значение переменной окружения в переменную
-# password = env('password')  
-
-# login = {'Valeriy': '1111'}
+url_server = env('url')  # Получаем и сохраняем значение переменной окружения в переменную
 
 logger = logging.getLogger(__name__)
 
 class MainScreen(MDScreen):
     '''здесь я создаю первый экран с именем MainScreen'''
-    access = False # Поставить на False
+    access = True # Поставить на False
     
     def __init__(self, **kwargs):
-        super(MainScreen, self).__init__(**kwargs)     
-
+        super(MainScreen, self).__init__(**kwargs)  
+ 
         """Проверка сервера в сети"""
-        def on_server(self):
+        def on_server(self, url=f'http://{url_server}/hello/'):
+            
+            def success(req, result):
+                logger.info(f'Сервер прислал ответ: {req._result}')
+                text_server.hint_text = 'Cервер на связи'
+
+            def failur(req, result):
+                logger.info(f'Сервер прислал ответ: {req._result}')
+                text_server.hint_text = 'Cервер на связи'
+
+            def error(req, result):
+                logger.error(result)
+                text_server.hint_text = 'Нет связи с сервером'
 
             logger.info(f'Проверка наличия сервера в сети')
-            try:
-                response = requests.head('http://192.168.1.33:8066',
-                                    timeout=5)
-                logger.info(response.status_code)
-                text_server.hint_text = 'Cервер на связи'
-            except:
-                text_server.hint_text = 'Нет связи с сервером'
-            Clock.schedule_once(lambda dt: on_server(self), 5) # Повторная попытка через 5 секунд
+            response = UrlRequest(url, 
+                                  on_success=success, 
+                                  on_failure=failur, 
+                                  on_error=error)
+            Clock.schedule_once(lambda dt: on_server(self, url), 5) # Повторная попытка через 5 секунд
 
         '''Завершить приложение'''
         def stop_program(self):
@@ -108,7 +112,7 @@ class MainScreen(MDScreen):
             def is_network_available():
                 logger.info(f'Проверка наличия интернета')
                 try:
-                    response = requests.head("http://www.google.com", timeout=5)
+                    response = requests.head("http://www.google.com")
                     logger.info(f'Интернет есть')
                     return response.status_code == 200
                 except:
@@ -118,7 +122,7 @@ class MainScreen(MDScreen):
                 logger.info(f'Попытка отправить запрос на сервер')    
                 if is_network_available():
                     logger.error(f'Загрузка на сервер')
-                    req = UrlRequest(f'http://192.168.1.33:8066/avt/?login={text_login.text}&password={text_passrd.text}', 
+                    req = UrlRequest(url=f'http://{url_server}/avt/?login={text_login.text}&password={text_passrd.text}', 
                                     on_success=success, 
                                     on_failure=failure,
                                     on_error=on_error)
@@ -147,9 +151,6 @@ class MainScreen(MDScreen):
             else:
             #     badge_icon="" 
                 pass
-
-        # '''Периодическая активация функции on_error'''
-        # Clock.schedule_interval(on_error, 1/5)
 
         '''Панель с помещениями'''
         panel = MDNavigationRail(    
@@ -211,7 +212,7 @@ class MainScreen(MDScreen):
                                  hint_text="Никнейм",
                                  hint_text_color_normal = blue,
                                  icon_left_color_normal = blue,
-                                 max_text_length=16,
+                                 max_text_length=12,
                                  error_color = blue,
                                  text_color_normal = blue,
                                  allow_copy=False,
@@ -270,6 +271,34 @@ class MainScreen(MDScreen):
                                  icon_left="",
                                  readonly=True)
 
+        '''Лейбл ввода IP'''
+        text_ip = MDTextField(size_hint=(0.4, None),
+                                 pos_hint={"center_x": 0.9, "center_y": 0.4},
+                                 size_hint_x=0.15,
+                                 mode="line",
+                                 hint_text="Введите IP: 192.168.1.33",
+                                 hint_text_color_normal = my_color,
+                                 icon_left_color_normal = my_color,
+                                 active_line=True,
+                                 allow_copy=False,
+                                 base_direction="ltr",
+                                 cursor_blink=True,
+                                 icon_left="")
+        
+        '''Лейбл для порта'''
+        text_port = MDTextField(size_hint=(0.4, None),
+                                 pos_hint={"center_x": 0.9, "center_y": 0.3},
+                                 size_hint_x=0.15,
+                                 mode="line",
+                                 hint_text="Введите порт: 8066",
+                                 hint_text_color_normal = my_color,
+                                 icon_left_color_normal = my_color,
+                                 active_line=True,
+                                 allow_copy=False,
+                                 base_direction="ltr",
+                                 cursor_blink=True,
+                                 icon_left="")
+
         '''Кнопка выхода из приложения'''
         exit_button = MDFloatingActionButton(icon="exit-run",
                                       md_bg_color = (0, 1, 0.7, 0.7),
@@ -281,7 +310,7 @@ class MainScreen(MDScreen):
         server_button = MDFloatingActionButton(icon="connection",
                                       md_bg_color = (0, 1, 0.7, 0.7),
                                       icon_color=(1, 1, 1, 1),
-                                      pos_hint={"center_x": 0.15, "center_y": 0.18},
+                                      pos_hint={"center_x": 0.94, "center_y": 0.08},
                                       on_press=on_server)
 
         '''Создание пустого макета, не привязанного к экрану'''
@@ -298,11 +327,13 @@ class MainScreen(MDScreen):
 
         ml.add_widget(panel)
         self.add_widget(ml)
-        
+       
         self.add_widget(text_field0)
         self.add_widget(text_passrd)
         self.add_widget(text_login)
-        self.add_widget(text_server)        
+        self.add_widget(text_server) 
+        self.add_widget(text_ip)        
+        self.add_widget(text_port) 
         
         self.add_widget(confirm)
         self.add_widget(server_button)
