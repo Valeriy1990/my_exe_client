@@ -214,6 +214,7 @@ class Screen(MDScreen):
             if self.humidity_text.focus == True:
                 self.temperature_text.focus = True
             self.humidity_text.flag = True
+            # logger.info(f'{self.url}, {self.login}')
             logger.info(f'Успешная валидация ввода влажности')
         except:
             self.humidity_text.flag = False
@@ -268,8 +269,9 @@ class Screen(MDScreen):
         self.manager.current = 'Main'  # Выбор экрана по имени (в данном случае по имени "Main")
         return 0
     
-    def set_url(self, url):
+    def set_url(self, url, login,  *args):
         self.url = url
+        self.login = login
 
     # '''Периодическая проверка на пустые поля температуры и влажности'''
     # def exist():

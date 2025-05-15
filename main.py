@@ -1,52 +1,403 @@
 from kivy.app import App
 from kivymd.app import MDApp
+from kivy.clock import Clock, mainthread
+from kivy.app import async_runTouchApp
+from kivy.uix.scrollview import ScrollView
+from kivy.network.urlrequest import UrlRequest
+from kivymd.uix.button import MDRectangleFlatButton, MDIconButton, MDFloatingActionButton
+from kivymd.uix.boxlayout import MDBoxLayout
+from kivymd.uix.textfield import MDTextField
+from kivymd.uix.screen import MDScreen
+from kivymd.uix.screenmanager import MDScreenManager
+from kivymd.uix.navigationrail import MDNavigationRail, MDNavigationRailItem
+
+from models import Info_client_url
+
+import asyncio
+from asyncio import sleep
 import logging.config
 from logging_settings import logging_config
-from kivymd.uix.textfield import MDTextField
-
-
 from environs import Env
 import datetime
 import pickle
 import requests
 import logging
+import time
 
 
-from kivymd.app import MDApp
-from kivymd.uix.screenmanager import MDScreenManager
-
-from MainScreen import MainScreen
+# from MainScreen import MainScreen
 from Screen import Screen
 
 from ccolor import *
 
 rooms_list = [f'room_{i}' for i in range(536, 549) if i != 547]
 
+# Загружаем настройки логирования из словаря `logging_config`
+logging.config.dictConfig(logging_config)
+
+
+
+logger = logging.getLogger(__name__)
 
 class MainApp(MDApp):
     '''Здесь я добавляю главный и второй экраны в менеджер, больше этот класс ничего не делает'''
-
-    # Загружаем настройки логирования из словаря `logging_config`
-    logging.config.dictConfig(logging_config)
+    access = True # Поставить на False
+    
         
     def build(self):
         self.theme_cls.theme_style = "Dark"
         
-        main_screen = MainScreen(name='Main')      
-        screen = Screen(name='Screen')
-        sm = MDScreenManager()  # Необходимо создать переменную manager, которая будет собирать экраны и управлять ими
-
-        sm.add_widget(main_screen)  # Установка значения имени экрана для менеджера экранов
-        sm.add_widget(screen)
-       
-        print(main_screen.return_url())
-        # main_screen.add_widget(text_passrd)
-        # main_screen.add_widget(text_login)
- 
-        # main_screen.add_widget(text_ip)        
-        # main_screen.add_widget(text_port) 
+        '''Панель с помещениями'''
+        panel = MDNavigationRail(    
+                    MDNavigationRailItem(icon="account-cancel",
+                                     on_press=self.account_reset,
+                                     text="Account Reset"),          
+                    MDNavigationRailItem(
+                        text=f"Room 536",
+                        icon="home-circle-outline",
+                        on_press=self.to_second_scrn,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
+                        badge_icon="exclamation-thick",
+                        badge_bg_color=(1, 1, 0, 1),
+                        badge_icon_color=(1, 0, 0, 1)),  
+                    MDNavigationRailItem(
+                        text="Room 537",
+                        icon="home-circle-outline"), 
+                    MDNavigationRailItem(
+                        text="Room 538",
+                        icon="home-circle-outline"),  
+                    MDNavigationRailItem(
+                        text="Room 539",
+                        icon="home-circle-outline"),    
+                    MDNavigationRailItem(
+                        text="Room 540",
+                        icon="home-circle-outline"),   
+                    MDNavigationRailItem(
+                        text="Room 541",
+                        icon="home-circle-outline"),  
+                    MDNavigationRailItem(
+                        text="Room 542",
+                        icon="home-circle-outline"),             
+                    MDNavigationRailItem(
+                        text="Room 543",
+                        icon="home-circle-outline"),       
+                    MDNavigationRailItem(
+                        text="Room 544",
+                        icon="home-circle-outline"),       
+                    MDNavigationRailItem(
+                        text="Room 545",
+                        icon="home-circle-outline"),          
+                    MDNavigationRailItem(
+                        text="Room 546",
+                        icon="home-circle-outline"),
+                    MDNavigationRailItem(
+                        text="Room 548",
+                        icon="home-circle-outline"),
+                    MDNavigationRailItem(
+                        text="Room 549a",
+                        icon="home-circle-outline"),             
+                    md_bg_color=(0.4, 0.4, 0.4, 1),
+                    current_selected_item=1,
+                    size_hint = (None, None),)
+        panel.height = 17 * 56 + 20
+    
+        '''Лейбл логин'''
+        self.text_login = MDTextField(size_hint=(0.4, None),
+                                 pos_hint={"center_x": 0.5, "center_y": 0.8},
+                                 mode="rectangle",
+                                 hint_text="Никнейм",
+                                 hint_text_color_normal = blue,
+                                 icon_left_color_normal = blue,
+                                 max_text_length=12,
+                                 error_color = blue,
+                                 text_color_normal = blue,
+                                 allow_copy=False,
+                                 base_direction="ltr",
+                                 cursor_blink=True,
+                                 icon_left="account",
+                                 foreground_color=green,
+                                #  on_text_validate=self.next_field,
+                                 fill_color_normal=green)
         
-        return sm  # Тут я возвращаю менедежер, что бы работать с ним
+        '''Лейбл пароль'''
+        self.text_passrd = MDTextField(size_hint=(0.4, None),
+                                  pos_hint={"center_x": 0.5, "center_y": 0.68},
+                                  mode="rectangle",
+                                  hint_text="Пароль",
+                                  icon_left="lock-outline",
+                                  hint_text_color_normal = blue,
+                                  icon_left_color_normal = blue,
+                                  helper_text="Минимальная длина 8 символов.",
+                                  helper_text_mode="on_error",
+                                  password=True,
+                                  password_mask="X")
+
+        '''Текст состояния авторизации'''
+        self.text_field0 = MDTextField(size_hint=(0.4, None),
+                                 pos_hint={"center_x": 0.35, "center_y": 0.93},
+                                 mode="line",
+                                 hint_text="None",
+                                 hint_text_color_normal = my_color,
+                                 icon_left_color_normal = my_color,
+                                 max_text_length=16,
+                                 active_line=True,
+                                 allow_copy=False,
+                                 base_direction="ltr",
+                                 cursor_blink=True,
+                                 icon_left="account-cowboy-hat",
+                                 readonly=True)
+
+        """Кнопка 'продолжить' после логина и пароля"""
+        confirm = MDRectangleFlatButton(text="Продолжить",
+                                    on_press=self.on_confirm,
+                                    pos_hint={"center_x": 0.5, "center_y": 0.2})
+
+        '''Лейбл связи с сервером'''
+        self.text_server = MDTextField(size_hint=(0.4, None),
+                                 pos_hint={"center_x": 0.5, "center_y": 0.1},
+                                 mode="line",
+                                 hint_text="",
+                                 hint_text_color_normal = my_color,
+                                 icon_left_color_normal = my_color,
+                                 max_text_length=16,
+                                 active_line=True,
+                                 allow_copy=False,
+                                 base_direction="ltr",
+                                 cursor_blink=True,
+                                 icon_left="",
+                                 readonly=True)
+
+        '''Лейбл ввода IP'''
+        self.text_ip = MDTextField(size_hint=(0.4, None),
+                                 pos_hint={"center_x": 0.9, "center_y": 0.4},
+                                 size_hint_x=0.15,
+                                 mode="line",
+                                 hint_text="Введите IP",
+                                 hint_text_color_normal = my_color,
+                                 icon_left_color_normal = my_color,
+                                 active_line=True,
+                                 allow_copy=False,
+                                 base_direction="ltr",
+                                 cursor_blink=True,
+                                 text='192.168.1.33',
+                                 icon_left="")
+        
+        '''Лейбл для порта'''
+        self.text_port = MDTextField(size_hint=(0.4, None),
+                                 pos_hint={"center_x": 0.9, "center_y": 0.3},
+                                 size_hint_x=0.15,
+                                 mode="line",
+                                 hint_text="Введите порт",
+                                 hint_text_color_normal = my_color,
+                                 icon_left_color_normal = my_color,
+                                 active_line=True,
+                                 allow_copy=False,
+                                 base_direction="ltr",
+                                 cursor_blink=True,
+                                 text='8066',
+                                 icon_left="")
+
+        '''Кнопка выхода из приложения'''
+        exit_button = MDFloatingActionButton(icon="exit-run",
+                                      md_bg_color = (0, 1, 0.7, 0.7),
+                                      icon_color=(1, 1, 1, 1),
+                                      on_press=self.stop_program,
+                                      pos_hint={"center_x": 0.15, "center_y": 0.08})
+        
+        '''Кнопка подключения к серверу'''
+        server_button = MDFloatingActionButton(icon="connection",
+                                      md_bg_color = (0, 1, 0.7, 0.7),
+                                      icon_color=(1, 1, 1, 1),
+                                      on_press=self.on_server,
+                                      pos_hint={"center_x": 0.94, "center_y": 0.08})
+
+        '''Создание пустого макета, не привязанного к экрану'''
+        main_layout = MDBoxLayout(orientation="vertical")   
+
+        '''Значок глаза на лейбл пароль'''
+        eye_outline = MDIconButton(icon="eye-outline",
+                                    on_press=self.show_password,
+                                    pos_hint={"center_x": 0.67, "center_y": 0.67})
+
+        '''Ролик на боковую панель'''
+        ml = ScrollView(do_scroll_x = False,
+                        bar_pos_y = 'left')
+
+
+        main_screen = MDScreen(name='Main')      
+        self.screen = Screen(name='Screen')
+        self.sm = MDScreenManager()  # Необходимо создать переменную manager, которая будет собирать экраны и управлять ими
+
+
+
+        self.sm.add_widget(main_screen)  # Установка значения имени экрана для менеджера экранов
+        self.sm.add_widget(self.screen)
+       
+        self.url = f'{self.text_ip.text}:{self.text_port.text}'
+        self.info = Info_client_url()
+
+        ml.add_widget(panel)
+        main_screen.add_widget(ml)
+       
+        main_screen.add_widget(self.text_field0)
+        main_screen.add_widget(self.text_passrd)
+        main_screen.add_widget(self.text_login)
+        main_screen.add_widget(self.text_server) 
+        main_screen.add_widget(self.text_ip)        
+        main_screen.add_widget(self.text_port) 
+        
+        main_screen.add_widget(confirm)
+        main_screen.add_widget(server_button)
+        main_screen.add_widget(exit_button)
+        main_screen.add_widget(eye_outline)
+        main_screen.add_widget(main_layout)
+        
+        return self.sm  # Тут я возвращаю менедежер, что бы работать с ним
+    
+    '''Завершить приложение'''
+    def stop_program(self, instance):
+        logger.info('Успешный выход из программы. Ты великолепен!!')
+        App.get_running_app().stop()
+
+    # """Если текст логина введён в нужном формате, фокус сменяется на пароль"""
+    # def next_field(self, instance):
+    #     logger.info('Смена фокуса с логина на пароль')
+    #     if self.text_login.focus == True:
+    #         self.text_passrd.focus = True
+
+    '''Скрыть/показать пароль'''
+    def show_password(self, instance):
+        if self.text_passrd.password == True:
+            self.text_passrd.password = False
+            instance.icon = "eye-off-outline"
+        else:
+            self.text_passrd.password = True
+            instance.icon = "eye-outline"
+
+    '''Авторизация'''
+    def on_confirm(self, instance):
+
+        """В случае успеха"""
+        @mainthread
+        def success(req, result):
+            logger.info(f'Сервер подтвердил запрос')
+            # self.info = Info_client_url(url=self.url, login=self.text_login.text)
+            self.text_field0.hint_text = self.text_login.text if req._result else "Неверный логин или пароль"
+            self.text_passrd.text = ""
+            self.text_login.text = ""
+            MainApp.access = req._result
+            logger.info(f'Процедура авторизации прошла успешно')
+
+        """В случае неудачи"""
+        @mainthread
+        def on_error(req, error):
+            self.text_field0.hint_text = "Ожидание ответа от сервера..."
+            MainApp.access = req._result
+            load()
+            logger.debug(f'Ошибка авторизации') 
+
+        """Данные на сервер на сервер переданы, но есть проблема"""
+        @mainthread
+        def failure(req, result):
+            self.text_field0.hint_text = "Введите логин и пароль ещё раз"
+            MainApp.access = req._result
+            logger.debug(f'Какие-то проблемы') 
+
+        """Проверка наличия интернета"""
+        def is_network_available():
+            logger.info(f'Проверка наличия интернета')
+            try:
+                response = requests.head("http://www.google.com")
+                logger.info(f'Интернет есть')
+                return response.status_code == 200
+            except:
+                return False
+
+        def load():          
+            self.url = f'{self.text_ip.text}:{self.text_port.text}' 
+            logger.info(f'Попытка отправить запрос на сервер')    
+            if is_network_available():
+                logger.error(f'Загрузка на сервер')
+                req = UrlRequest(url=f'http://{self.url}/avt/?login={self.text_login.text}&password={self.text_passrd.text}', 
+                                    on_success=success, 
+                                    on_failure=failure,
+                                    on_error=on_error)
+            else:
+                logger.error(f'Интернета нет')
+                self.text_field0.hint_text = "Нет подключения к сети. Попробуем позже..."
+                Clock.schedule_once(lambda dt: load(), 5) # Повторная попытка через 5 секунд
+
+# from kivy.app import App
+# from kivy.uix.button import Button
+
+
+# class MyApp(App):
+#     def build(self):
+#         self.button = Button(text="Нажми меня")
+#         self.button.bind(on_press=self.on_press)
+#         return self.button
+
+#     async def async_sleep(self):
+#         await asyncio.sleep(3)
+#         print("Прошло 3 секунды!")
+
+#     def on_press(self, instance):
+#         print("Начало ожидания...")
+#         async_start(self.async_sleep())
+        # loop = asyncio.get_event_loop()
+        # loop.run_until_complete(async_runTouchApp(self.asynctime() ,async_lib='asyncio'))
+
+        # asyncio.run(self.main_asynctime())
+
+        load()       
+
+    # async def asynctime(self, n):
+    #     self.text_field0.hint_text = f"Ожидание ответа от сервера{'.'*n}"
+    #     logger.info('!!!')
+    #     await asyncio.sleep(3)
+
+    # async def main_asynctime(self):
+    #     tasks = [self.asynctime(i) for i in range(4)]
+    #     await asyncio.gather(*tasks)
+
+    '''Сброс авторизации'''
+    def account_reset(self, instance):
+        logger.info('Успешный сброс авторизации')
+        self.text_field0.hint_text = "Введите логин и пароль"
+        MainApp.access = False
+
+    """Проверка сервера в сети"""
+    def on_server(self, instance):
+
+        self.url = f'{self.text_ip.text}:{self.text_port.text}'   
+
+        def success(req, result):
+            logger.info(f'Сервер прислал ответ: {req._result}')
+            self.text_server.hint_text = 'Cервер на связи'
+
+        def failur(req, result):
+            logger.info(f'Сервер прислал ответ: {req._result}')
+            self.text_server.hint_text = 'Cервер на связи'
+
+        def error(req, result):
+            logger.error(result)
+            self.text_server.hint_text = 'Нет связи с сервером'
+
+        logger.info(f'Проверка наличия сервера в сети')
+        response = UrlRequest(f'http://{self.url}/hello/', 
+                                  on_success=success, 
+                                  on_failure=failur, 
+                                  on_error=error)
+        
+        Clock.schedule_once(lambda dt: self.on_server(f'http://{self.url}/hello/'), 5) # Повторная попытка через 5 секунд
+    
+    # def return_url(self):
+    #     return c
+
+    def to_second_scrn(self, *args):
+        if MainApp.access == True:
+            self.screen.set_url(url=self.url, login=self.text_login.text)
+            self.sm.current = 'Screen'  # Выбор экрана по имени (в данном случае по имени "Second")
+            return 0  # Не обязательно
     
 if __name__ == '__main__':
     MainApp().run()

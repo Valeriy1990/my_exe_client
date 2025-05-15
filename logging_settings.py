@@ -38,7 +38,7 @@ logging_config = {
 
     },
     'root': {
-        'formatter': 'default',
-        'handlers': ['default']
+        'formatter': 'INFO',
+        'handlers': ['stdout']
     }
 }
