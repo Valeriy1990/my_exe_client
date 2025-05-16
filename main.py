@@ -40,11 +40,14 @@ logging.config.dictConfig(logging_config)
 
 logger = logging.getLogger(__name__)
 
-
 class MainApp(MDApp):
     '''Здесь я добавляю главный и второй экраны в менеджер, больше этот класс ничего не делает'''
     access = True # Поставить на False
     login_active = 'test_login_in_main'
+    
+    # name_attr = f'room_{537}'
+    # scr = Screen(name="Screen_537", room="550")
+    # self.__setattr__(name_attr, scr)
         
     def build(self):
         self.theme_cls.theme_style = "Dark"
@@ -236,29 +239,44 @@ class MainApp(MDApp):
         ml = ScrollView(do_scroll_x = False,
                         bar_pos_y = 'left')
 
+        rooms_dict={}
+
         self.sm = MDScreenManager()  # Необходимо создать переменную manager, которая будет собирать экраны и управлять ими
         main_screen = MDScreen(name='Main')      
-        self.screen_536 = Screen(name='Screen_536', room=536)
-        self.screen_537 = Screen(name="Screen_537", room=537)
-        # self.screen_538 = Screen(name="Screen_537", room=537)
-        # self.screen_539 = Screen(name="Screen_537", room=537)
-        # self.screen_540 = Screen(name="Screen_537", room=537)
-        # self.screen_541 = Screen(name="Screen_537", room=537)
-        # self.screen_542 = Screen(name="Screen_537", room=537)
-        # self.screen_543 = Screen(name="Screen_537", room=537)
-        # self.screen_544 = Screen(name="Screen_537", room=537)
-        # self.screen_545 = Screen(name="Screen_537", room=537)
-        # self.screen_546 = Screen(name="Screen_537", room=537)
-        # self.screen_548 = Screen(name="Screen_537", room=537)
-        # self.screen_549а = Screen(name="Screen_537", room=537)
-
-
-
-
+        
+        for room in list(range(536, 547)) + ['548','549a']:
+            self.__dict__[f'screen_{room}'] = Screen(name=f"Screen_{room}", room=room)
+        
+        # self.screen_536 = Screen(name='Screen_536', room="536")
+        # rooms_dict['room_536'] = self.screen_536
+        # self.screen_537 = Screen(name="Screen_537", room="537")
+        # rooms_dict['room_537'] = self.screen_537
+        # self.screen_538 = Screen(name="Screen_538", room="538")
+        # rooms_dict['room_538'] = self.screen_538
+        # self.screen_539 = Screen(name="Screen_539", room="539")
+        # rooms_dict['room_539'] = self.screen_539
+        # self.screen_540 = Screen(name="Screen_540", room="540")
+        # rooms_dict['room_540'] = self.screen_540
+        # self.screen_541 = Screen(name="Screen_541", room="541")
+        # rooms_dict['room_541'] = self.screen_541
+        # self.screen_542 = Screen(name="Screen_542", room="542")
+        # rooms_dict['room_542'] = self.screen_542
+        # self.screen_543 = Screen(name="Screen_543", room="543")
+        # rooms_dict['room_543'] = self.screen_543
+        # self.screen_544 = Screen(name="Screen_544", room="544")
+        # rooms_dict['room_544'] = self.screen_544
+        # self.screen_545 = Screen(name="Screen_545", room="545")
+        # rooms_dict['room_545'] = self.screen_545
+        # self.screen_546 = Screen(name="Screen_546", room="546")
+        # rooms_dict['room_546'] = self.screen_546
+        # self.screen_548 = Screen(name="Screen_548", room="548")
+        # rooms_dict['room_548'] = self.screen_548
+        # self.screen_549а = Screen(name="Screen_549a", room="549a")
+        # rooms_dict['room_549a'] = self.screen_549а
+        
         self.sm.add_widget(main_screen)  # Установка значения имени экрана для менеджера экранов
         self.sm.add_widget(self.screen_536)
         self.sm.add_widget(self.screen_537)
-
        
         self.url = f'{self.text_ip.text}:{self.text_port.text}'
 

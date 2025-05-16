@@ -26,7 +26,7 @@ class Screen(MDScreen):
         
     def __init__(self, room, **kwargs):      # на этом экране я делаю все то же самое, что и на главном экране, чтобы иметь возможность переключаться вперед и назад
         super(Screen, self).__init__(**kwargs)
-        self.room = room
+        self.room = str(room)
         self.url = 'test_url'
         self.login = 'test_login'
 
