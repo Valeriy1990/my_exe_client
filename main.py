@@ -40,81 +40,36 @@ logging.config.dictConfig(logging_config)
 
 logger = logging.getLogger(__name__)
 
+rooms = (i for i  in range(536, 549) if i != 547)
+
+
+
 class MainApp(MDApp):
     '''Здесь я добавляю главный и второй экраны в менеджер, больше этот класс ничего не делает'''
     access = True # Поставить на False
     login_active = 'test_login_in_main'
     
-    # name_attr = f'room_{537}'
-    # scr = Screen(name="Screen_537", room="550")
-    # self.__setattr__(name_attr, scr)
-        
+
+    
+    def __new__(cls, *args, **kwgars):
+        # for room in rooms:
+        instance = super().__new__(cls, *args, **kwgars)
+        # cls.to_scrn_537 = lambda dt: to_scrn()
+        return instance
+    
+
+
     def build(self):
         self.theme_cls.theme_style = "Dark"
         
         '''Панель с помещениями'''
         panel = MDNavigationRail(    
                     MDNavigationRailItem(icon="account-cancel",
-                                     on_press=self.account_reset,
-                                     text="Account Reset"),          
-                    MDNavigationRailItem(
-                        text=f"Room 536",
-                        icon="home-circle-outline",
-                        on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
-                        badge_icon="exclamation-thick",
-                        badge_bg_color=(1, 1, 0, 1),
-                        badge_icon_color=(1, 0, 0, 1)),  
-                    MDNavigationRailItem(
-                        text="Room 537",
-                        on_press=self.to_scrn_537,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
-                        icon="home-circle-outline"), 
-                    MDNavigationRailItem(
-                        text="Room 538",
-                        on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
-                        icon="home-circle-outline"),  
-                    MDNavigationRailItem(
-                        text="Room 539",
-                        on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
-                        icon="home-circle-outline"),    
-                    MDNavigationRailItem(
-                        text="Room 540",
-                        on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
-                        icon="home-circle-outline"),   
-                    MDNavigationRailItem(
-                        text="Room 541",
-                        on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
-                        icon="home-circle-outline"),  
-                    MDNavigationRailItem(
-                        text="Room 542",
-                        on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
-                        icon="home-circle-outline"),             
-                    MDNavigationRailItem(
-                        text="Room 543",
-                        on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
-                        icon="home-circle-outline"),       
-                    MDNavigationRailItem(
-                        text="Room 544",
-                        on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
-                        icon="home-circle-outline"),       
-                    MDNavigationRailItem(
-                        text="Room 545",
-                        on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
-                        icon="home-circle-outline"),          
-                    MDNavigationRailItem(
-                        text="Room 546",
-                        on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
-                        icon="home-circle-outline"),
-                    MDNavigationRailItem(
-                        text="Room 548",
-                        on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
-                        icon="home-circle-outline"),
-                    MDNavigationRailItem(
-                        text="Room 549a",
-                        on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
-                        icon="home-circle-outline"),             
-                    md_bg_color=(0.4, 0.4, 0.4, 1),
-                    current_selected_item=1,
-                    size_hint = (None, None),)
+                                    on_press=self.account_reset,
+                                    text="Account Reset"),               
+                                    md_bg_color=(0.4, 0.4, 0.4, 1),
+                                    current_selected_item=1,
+                                    size_hint = (None, None))
         panel.height = 17 * 56 + 20
     
         '''Лейбл логин'''
@@ -239,45 +194,38 @@ class MainApp(MDApp):
         ml = ScrollView(do_scroll_x = False,
                         bar_pos_y = 'left')
 
-        rooms_dict={}
-
         self.sm = MDScreenManager()  # Необходимо создать переменную manager, которая будет собирать экраны и управлять ими
         main_screen = MDScreen(name='Main')      
         
-        for room in list(range(536, 547)) + ['548','549a']:
-            self.__dict__[f'screen_{room}'] = Screen(name=f"Screen_{room}", room=room)
-        
-        # self.screen_536 = Screen(name='Screen_536', room="536")
-        # rooms_dict['room_536'] = self.screen_536
-        # self.screen_537 = Screen(name="Screen_537", room="537")
-        # rooms_dict['room_537'] = self.screen_537
-        # self.screen_538 = Screen(name="Screen_538", room="538")
-        # rooms_dict['room_538'] = self.screen_538
-        # self.screen_539 = Screen(name="Screen_539", room="539")
-        # rooms_dict['room_539'] = self.screen_539
-        # self.screen_540 = Screen(name="Screen_540", room="540")
-        # rooms_dict['room_540'] = self.screen_540
-        # self.screen_541 = Screen(name="Screen_541", room="541")
-        # rooms_dict['room_541'] = self.screen_541
-        # self.screen_542 = Screen(name="Screen_542", room="542")
-        # rooms_dict['room_542'] = self.screen_542
-        # self.screen_543 = Screen(name="Screen_543", room="543")
-        # rooms_dict['room_543'] = self.screen_543
-        # self.screen_544 = Screen(name="Screen_544", room="544")
-        # rooms_dict['room_544'] = self.screen_544
-        # self.screen_545 = Screen(name="Screen_545", room="545")
-        # rooms_dict['room_545'] = self.screen_545
-        # self.screen_546 = Screen(name="Screen_546", room="546")
-        # rooms_dict['room_546'] = self.screen_546
-        # self.screen_548 = Screen(name="Screen_548", room="548")
-        # rooms_dict['room_548'] = self.screen_548
-        # self.screen_549а = Screen(name="Screen_549a", room="549a")
-        # rooms_dict['room_549a'] = self.screen_549а
-        
         self.sm.add_widget(main_screen)  # Установка значения имени экрана для менеджера экранов
-        self.sm.add_widget(self.screen_536)
-        self.sm.add_widget(self.screen_537)
-       
+              
+        for room in rooms:  # Создаём объекты Screen и MDNavigationRailItem
+            self.__dict__[f'screen_{room}'] = Screen(name=f"Screen_{room}", room=room)
+            self.sm.add_widget(self.__getattribute__(f'screen_{room}'))
+            panel.add_widget(MDNavigationRailItem(
+                        text=f"Room {room}",
+                        icon="home-circle-outline",
+                        on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
+                        badge_icon="exclamation-thick",
+                        badge_bg_color=(1, 1, 0, 1),
+                        badge_icon_color=(1, 0, 0, 1)))
+            
+        # panel.add_widget(MDNavigationRailItem(
+        #                 text=f"Room 536",
+        #                 icon="home-circle-outline",
+        #                 on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
+        #                 badge_icon="exclamation-thick",
+        #                 badge_bg_color=(1, 1, 0, 1),
+        #                 badge_icon_color=(1, 0, 0, 1)))   
+        
+        # panel.add_widget(MDNavigationRailItem(
+        #                 text=f"Room 537",
+        #                 icon="home-circle-outline",
+        #                 on_press=self.to_scrn_537,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
+        #                 badge_icon="exclamation-thick",
+        #                 badge_bg_color=(1, 1, 0, 1),
+        #                 badge_icon_color=(1, 0, 0, 1)))
+
         self.url = f'{self.text_ip.text}:{self.text_port.text}'
 
         ml.add_widget(panel)
@@ -409,22 +357,43 @@ class MainApp(MDApp):
         if MainApp.access == True:
             self.screen_536.set_url(url=self.url, login=self.login_active)
             self.sm.current = 'Screen_536'  # Выбор экрана по имени (в данном случае по имени "Second")
+            print(MainApp.__dict__)
             return 0  # Не обязательно
         
-    def to_scrn_536(self, *args):
-        """Смена скрина"""
-        if MainApp.access == True:
-            self.screen_536.set_url(url=self.url, login=self.login_active)
-            self.sm.current = "Screen_536"  # Выбор экрана по имени (в данном случае по имени "Second")
-            return 0  # Не обязательно
+# def to_scrn(room, *args):
+#     """Смена скрина"""
+#     if MainApp.access == True:
+#         MainApp.__getattribute__(f'screen_{room}').set_url(url=MainApp.url, login=MainApp.login_active)
+#         MainApp.sm.current = f'Screen_{room}'  # Выбор экрана по имени (в данном случае по имени "Second")
+#         return 0  # Не обязательно
         
-    def to_scrn_537(self, *args):
-        """Смена скрина"""
-        if MainApp.access == True:
-            self.screen_537.set_url(url=self.url, login=self.login_active)
-            self.sm.current = 'Screen_537'  # Выбор экрана по имени (в данном случае по имени "Second")
-            return 0  # Не обязательно
-    
+# for room in rooms:  # Создаём объекты Screen и MDNavigationRailItem
+        # MainApp.__dict__[f'to_scrn_537'] = 1
+        
+        
+        
+    # def to_scrn_536(self, *args):
+    #     """Смена скрина"""
+    #     if MainApp.access == True:
+    #         self.screen_536.set_url(url=self.url, login=self.login_active)
+    #         self.sm.current = "Screen_536"  # Выбор экрана по имени (в данном случае по имени "Second")
+    #         return 0  # Не обязательно
+        
+    # def to_scrn_537(self, *args):
+    #     """Смена скрина"""
+    #     if MainApp.access == True:
+    #         self.screen_537.set_url(url=self.url, login=self.login_active)
+    #         self.sm.current = 'Screen_537'  # Выбор экрана по имени (в данном случае по имени "Second")
+    #         return 0  # Не обязательно
+
+# def to_scrn(*args):
+#     """Смена скрина"""
+#     if MainApp.access == True:
+#         logger.info(f'Ты красава')
+#     #     MainApp.__getattribute__(f'screen_{room}').set_url(url=MainApp.url, login=MainApp.login_active)
+#     #     MainApp.sm.current = f'Screen_{room}'  # Выбор экрана по имени (в данном случае по имени "Second")
+#     #     return 0  # Не обязательно
+
 if __name__ == '__main__':
     MainApp().run()
 
