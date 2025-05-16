@@ -33,15 +33,13 @@ git reset --hard mnf3m
 git push --force origin main'''
 
 from Screen import Screen
-
 from ccolor import *
-
-rooms_list = [f'room_{i}' for i in range(536, 549) if i != 547]
 
 # Загружаем настройки логирования из словаря `logging_config`
 logging.config.dictConfig(logging_config)
 
 logger = logging.getLogger(__name__)
+
 
 class MainApp(MDApp):
     '''Здесь я добавляю главный и второй экраны в менеджер, больше этот класс ничего не делает'''
@@ -59,45 +57,57 @@ class MainApp(MDApp):
                     MDNavigationRailItem(
                         text=f"Room 536",
                         icon="home-circle-outline",
-                        on_press=self.to_second_scrn,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
+                        on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
                         badge_icon="exclamation-thick",
                         badge_bg_color=(1, 1, 0, 1),
                         badge_icon_color=(1, 0, 0, 1)),  
                     MDNavigationRailItem(
                         text="Room 537",
+                        on_press=self.to_scrn_537,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
                         icon="home-circle-outline"), 
                     MDNavigationRailItem(
                         text="Room 538",
+                        on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
                         icon="home-circle-outline"),  
                     MDNavigationRailItem(
                         text="Room 539",
+                        on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
                         icon="home-circle-outline"),    
                     MDNavigationRailItem(
                         text="Room 540",
+                        on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
                         icon="home-circle-outline"),   
                     MDNavigationRailItem(
                         text="Room 541",
+                        on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
                         icon="home-circle-outline"),  
                     MDNavigationRailItem(
                         text="Room 542",
+                        on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
                         icon="home-circle-outline"),             
                     MDNavigationRailItem(
                         text="Room 543",
+                        on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
                         icon="home-circle-outline"),       
                     MDNavigationRailItem(
                         text="Room 544",
+                        on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
                         icon="home-circle-outline"),       
                     MDNavigationRailItem(
                         text="Room 545",
+                        on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
                         icon="home-circle-outline"),          
                     MDNavigationRailItem(
                         text="Room 546",
+                        on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
                         icon="home-circle-outline"),
                     MDNavigationRailItem(
                         text="Room 548",
+                        on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
                         icon="home-circle-outline"),
                     MDNavigationRailItem(
                         text="Room 549a",
+                        on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
                         icon="home-circle-outline"),             
                     md_bg_color=(0.4, 0.4, 0.4, 1),
                     current_selected_item=1,
@@ -226,15 +236,29 @@ class MainApp(MDApp):
         ml = ScrollView(do_scroll_x = False,
                         bar_pos_y = 'left')
 
-
-        main_screen = MDScreen(name='Main')      
-        self.screen = Screen(name='Screen')
         self.sm = MDScreenManager()  # Необходимо создать переменную manager, которая будет собирать экраны и управлять ими
+        main_screen = MDScreen(name='Main')      
+        self.screen_536 = Screen(name='Screen_536', room=536)
+        self.screen_537 = Screen(name="Screen_537", room=537)
+        # self.screen_538 = Screen(name="Screen_537", room=537)
+        # self.screen_539 = Screen(name="Screen_537", room=537)
+        # self.screen_540 = Screen(name="Screen_537", room=537)
+        # self.screen_541 = Screen(name="Screen_537", room=537)
+        # self.screen_542 = Screen(name="Screen_537", room=537)
+        # self.screen_543 = Screen(name="Screen_537", room=537)
+        # self.screen_544 = Screen(name="Screen_537", room=537)
+        # self.screen_545 = Screen(name="Screen_537", room=537)
+        # self.screen_546 = Screen(name="Screen_537", room=537)
+        # self.screen_548 = Screen(name="Screen_537", room=537)
+        # self.screen_549а = Screen(name="Screen_537", room=537)
+
 
 
 
         self.sm.add_widget(main_screen)  # Установка значения имени экрана для менеджера экранов
-        self.sm.add_widget(self.screen)
+        self.sm.add_widget(self.screen_536)
+        self.sm.add_widget(self.screen_537)
+
        
         self.url = f'{self.text_ip.text}:{self.text_port.text}'
 
@@ -362,11 +386,25 @@ class MainApp(MDApp):
         
         Clock.schedule_once(lambda dt: self.on_server(f'http://{self.url}/hello/'), 5) # Повторная попытка через 5 секунд
     
-    def to_second_scrn(self, *args):
+    def to_scrn_536(self, *args):
         """Смена скрина"""
         if MainApp.access == True:
-            self.screen.set_url(url=self.url, login=self.login_active)
-            self.sm.current = 'Screen'  # Выбор экрана по имени (в данном случае по имени "Second")
+            self.screen_536.set_url(url=self.url, login=self.login_active)
+            self.sm.current = 'Screen_536'  # Выбор экрана по имени (в данном случае по имени "Second")
+            return 0  # Не обязательно
+        
+    def to_scrn_536(self, *args):
+        """Смена скрина"""
+        if MainApp.access == True:
+            self.screen_536.set_url(url=self.url, login=self.login_active)
+            self.sm.current = "Screen_536"  # Выбор экрана по имени (в данном случае по имени "Second")
+            return 0  # Не обязательно
+        
+    def to_scrn_537(self, *args):
+        """Смена скрина"""
+        if MainApp.access == True:
+            self.screen_537.set_url(url=self.url, login=self.login_active)
+            self.sm.current = 'Screen_537'  # Выбор экрана по имени (в данном случае по имени "Second")
             return 0  # Не обязательно
     
 if __name__ == '__main__':

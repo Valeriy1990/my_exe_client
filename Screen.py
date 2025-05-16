@@ -19,12 +19,12 @@ from ccolor import *
 
 logger = logging.getLogger(__name__)
 
-logger.propagate = False  # Что бы не логи root не дублировались
+logger.propagate = False  # Что бы логи root не дублировались
 
 class Screen(MDScreen):
     '''здесь я создаю второй экран с именем Screen'''
         
-    def __init__(self, room=536, **kwargs):      # на этом экране я делаю все то же самое, что и на главном экране, чтобы иметь возможность переключаться вперед и назад
+    def __init__(self, room, **kwargs):      # на этом экране я делаю все то же самое, что и на главном экране, чтобы иметь возможность переключаться вперед и назад
         super(Screen, self).__init__(**kwargs)
         self.room = room
         self.url = 'test_url'
@@ -126,7 +126,6 @@ class Screen(MDScreen):
         self.add_widget(self.confirm)
         self.add_widget(layout) 
 
-
     def load(self, data):
         '''Загрузка данных на сервер'''      
       
@@ -136,12 +135,12 @@ class Screen(MDScreen):
             global room_536
             logger.info(f'Данные отправленны!!. Result: {result}. Поздравляю!!')
             self.error_text.hint_text = ''
-            flag = {f"room_{self.room}": str(datetime.now())}
-            with open('my_exe_client/data_states.pickle', 'wb') as f:
-                first = pickle.dumps(flag)
-                f.write(first)
-            logger.info(f'Появился pickle!')
-            self.checkbox1_state()
+            # flag = {f"room_{self.room}": str(datetime.now())}
+            # with open('my_exe_client/data_states.pickle', 'wb') as f:
+            #     first = pickle.dumps(flag)
+            #     f.write(first)
+            # logger.info(f'Появился pickle!')
+            # self.checkbox1_state()
 
         @mainthread
         def failure(req, result):
@@ -178,7 +177,6 @@ class Screen(MDScreen):
         if is_network_available():
             self.error_text.hint_text = 'Идёт загрузка...'
             logger.info(f'Загрузка на сервер')
-            print(self.url)
             req = UrlRequest(f'http://192.168.1.33:8066/setdata/', 
                                     req_body=data, 
                                     on_success=success, 
@@ -196,6 +194,7 @@ class Screen(MDScreen):
         data = {"humidity": self.humidity_text.text, "temperature": self.temperature_text.text, "room": self.room, "login": self.login, "creation_date": str(datetime.now())}
         data = json.dumps(data)  
         self.load(data)
+
 
     def on_error_humaditi(self, instance):
         """Валидация параметров ввода влажности и смена фокуса на температуру"""
@@ -250,20 +249,21 @@ class Screen(MDScreen):
 
     def checkbox1_state(self):
         '''Реакция смайла на pickle'''
-        global room_536
-        try:
-            with open('my_exe_client/data_states.pickle', 'rb') as f:
-                logger.info(f'Считывание pickle!')
-                first = f.read()
-                flag = pickle.loads(first)
-                tap_flag = flag[f"room_{self.room}"]
-        except FileNotFoundError:
-            pass
-        logger.info(f'Проверка условия для смайла')
-        if not tap_flag or datetime.fromisoformat(tap_flag).date() != datetime.now().date():
-            self.checkbox1.state = 'down'    #  Реакция смайла 
-        else:
-            self.checkbox1.state = 'normal'  #  Реакция смайла 
+        pass
+        # global room_536
+        # try:
+        #     with open('my_exe_client/data_states.pickle', 'rb') as f:
+        #         logger.info(f'Считывание pickle!')
+        #         first = f.read()
+        #         flag = pickle.loads(first)
+        #         tap_flag = flag[f"room_{self.room}"]
+        # except FileNotFoundError:
+        #     pass
+        # logger.info(f'Проверка условия для смайла')
+        # if not tap_flag or datetime.fromisoformat(tap_flag).date() != datetime.now().date():
+        #     self.checkbox1.state = 'down'    #  Реакция смайла 
+        # else:
+        #     self.checkbox1.state = 'normal'  #  Реакция смайла 
 
     def to_main_scrn(self, *args):  # Вместе с нажатием кнопки он передает информацию о себе.
         # Чтобы не выдать ошибку, я добавляю в функцию *args
