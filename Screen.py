@@ -9,7 +9,6 @@ from kivy.uix.checkbox import CheckBox
 from kivy.network.urlrequest import UrlRequest
 from kivy.clock import Clock, mainthread
 
-from environs import Env
 import requests
 import pickle
 import logging
@@ -18,12 +17,9 @@ import json
 
 from ccolor import *
 
-# env = Env()  # Создаем экземпляр класса Env
-# env.read_env('my_exe_client\inter.env') # Методом read_env() читаем файл .env и загружаем из него переменные в окружение
-                          
-# url_server = env('url')  # Получаем и сохраняем значение переменной окружения в переменную
-
 logger = logging.getLogger(__name__)
+
+logger.propagate = False  # Что бы не логи root не дублировались
 
 class Screen(MDScreen):
     '''здесь я создаю второй экран с именем Screen'''
@@ -31,6 +27,8 @@ class Screen(MDScreen):
     def __init__(self, room=536, **kwargs):      # на этом экране я делаю все то же самое, что и на главном экране, чтобы иметь возможность переключаться вперед и назад
         super(Screen, self).__init__(**kwargs)
         self.room = room
+        self.url = 'test_url'
+        self.login = 'test_login'
 
         """Основной макет скрина
         Без него topbar спустится вниз"""
@@ -128,12 +126,13 @@ class Screen(MDScreen):
         self.add_widget(self.confirm)
         self.add_widget(layout) 
 
-    '''Загрузка данных на сервер'''
-    def load(self, data):      
 
-        """В случае успеха создаётся файл pickle с записью даты в виде строки и выполняется функция checkbox1_state"""
+    def load(self, data):
+        '''Загрузка данных на сервер'''      
+      
         @mainthread
         def success(req, result):
+            """В случае успеха создаётся файл pickle с записью даты в виде строки и выполняется функция checkbox1_state"""
             global room_536
             logger.info(f'Данные отправленны!!. Result: {result}. Поздравляю!!')
             self.error_text.hint_text = ''
@@ -144,28 +143,29 @@ class Screen(MDScreen):
             logger.info(f'Появился pickle!')
             self.checkbox1_state()
 
-        """Данные на сервер переданы, но есть проблема"""
         @mainthread
         def failure(req, result):
+            """Данные на сервер переданы, но есть проблема"""
             logger.info(f'Данные обработаны. Но есть нюанс: {result}')
-            self.error_text.hint_text = 'Данные на сервер переданы, но есть проблема'
+            self.error_text.hint_text = 'Ошибка со стороны сервера.'
 
-        """В случае неудачной передачи на сервер"""
         @mainthread
         def on_error(req, error):
+            """В случае неудачной передачи на сервер"""
             logger.info(f"Ошибка: {error}")
             self.error_text.hint_text = 'Нет связи с сервером'
             Clock.schedule_once(lambda dt: self.load(data), 5) # Повторная попытка через 5 секунд
 
-        '''Полоса прогресса'''
+        
         def post_progress(req, current_size, total_size):
+            '''Полоса прогресса'''
             #  current_size текущий размер
             #  total_size общий размер
             self.progress.value = (total_size - current_size) / total_size
             logger.info(f'полоса прогресса: {self.progress.value}')  
 
-        """Проверка наличия интернета"""
         def is_network_available():
+            """Проверка наличия интернета"""
             logger.info(f'Проверка наличия интернета')
             try:
                 response = requests.head("http://www.google.com")
@@ -185,19 +185,20 @@ class Screen(MDScreen):
                                     on_failure=failure,
                                     on_progress=post_progress,
                                     on_error=on_error)
+            print(data)
         else:
             logger.error(f'Интернета нет')
             self.error_text.hint_text = "Нет подключения к сети. Попробуем позже..."
             Clock.schedule_once(lambda dt: self.load(data), 5) # Повторная попытка через 5 секунд
 
-    """Подготовка POST запроса на сервер и отправка с помощью асинхронного UrlRequest"""
-    def on_confirm(self, instance):              
-        data = {"humidity": self.humidity_text.text, "temperature": self.temperature_text.text, "creation_date": str(datetime.now())}
+    def on_confirm(self, instance):
+        """Подготовка POST запроса на сервер и отправка с помощью асинхронного UrlRequest"""              
+        data = {"humidity": self.humidity_text.text, "temperature": self.temperature_text.text, "room": self.room, "login": self.login, "creation_date": str(datetime.now())}
         data = json.dumps(data)  
         self.load(data)
 
-    """Валидация параметров ввода влажности и смена фокуса на температуру"""
     def on_error_humaditi(self, instance):
+        """Валидация параметров ввода влажности и смена фокуса на температуру"""
         logger.info(f'Попытка ввода данных по влажности')
         try:
             humidity = float(self.humidity_text.text)
@@ -223,8 +224,8 @@ class Screen(MDScreen):
             self.humidity_text.helper_text = 'Через точку, бро((' if ',' in self.humidity_text.helper_text else 'Цифры, бро(('
             logger.info(f'Неверный формат данных по влажности')                
 
-    """Валидация параметров ввода температуры"""
     def on_error_temperature(self, instance):
+        """Валидация параметров ввода температуры"""
         logger.info(f'Попытка ввода данных по температуре')
         try:
             if self.humidity_text.flag:
@@ -247,8 +248,8 @@ class Screen(MDScreen):
             self.temperature_text.helper_text = 'Точка!!!' if ',' in self.temperature_text.helper_text else 'И тут цифры, бро(('
             logger.info(f'Неверный формат данных по температуре')   
 
-    '''Реакция смайла на pickle'''
     def checkbox1_state(self):
+        '''Реакция смайла на pickle'''
         global room_536
         try:
             with open('my_exe_client/data_states.pickle', 'rb') as f:
@@ -270,6 +271,8 @@ class Screen(MDScreen):
         return 0
     
     def set_url(self, url, login,  *args):
+        """Принимает данные пользователя и текущий url"""
+        logger.info(f'Скрин помещения {self.room} принял данные от main скрина')
         self.url = url
         self.login = login
 

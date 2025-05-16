@@ -11,8 +11,6 @@ from kivymd.uix.screen import MDScreen
 from kivymd.uix.screenmanager import MDScreenManager
 from kivymd.uix.navigationrail import MDNavigationRail, MDNavigationRailItem
 
-from models import Info_client_url
-
 import asyncio
 from asyncio import sleep
 import logging.config
@@ -24,8 +22,6 @@ import requests
 import logging
 import time
 
-
-# from MainScreen import MainScreen
 from Screen import Screen
 
 from ccolor import *
@@ -35,14 +31,12 @@ rooms_list = [f'room_{i}' for i in range(536, 549) if i != 547]
 # Загружаем настройки логирования из словаря `logging_config`
 logging.config.dictConfig(logging_config)
 
-
-
 logger = logging.getLogger(__name__)
 
 class MainApp(MDApp):
     '''Здесь я добавляю главный и второй экраны в менеджер, больше этот класс ничего не делает'''
     access = True # Поставить на False
-    
+    login_active = 'test_login_in_main'
         
     def build(self):
         self.theme_cls.theme_style = "Dark"
@@ -233,7 +227,6 @@ class MainApp(MDApp):
         self.sm.add_widget(self.screen)
        
         self.url = f'{self.text_ip.text}:{self.text_port.text}'
-        self.info = Info_client_url()
 
         ml.add_widget(panel)
         main_screen.add_widget(ml)
@@ -253,19 +246,19 @@ class MainApp(MDApp):
         
         return self.sm  # Тут я возвращаю менедежер, что бы работать с ним
     
-    '''Завершить приложение'''
     def stop_program(self, instance):
+        '''Завершить приложение'''
         logger.info('Успешный выход из программы. Ты великолепен!!')
         App.get_running_app().stop()
 
-    # """Если текст логина введён в нужном формате, фокус сменяется на пароль"""
-    # def next_field(self, instance):
-    #     logger.info('Смена фокуса с логина на пароль')
-    #     if self.text_login.focus == True:
-    #         self.text_passrd.focus = True
-
-    '''Скрыть/показать пароль'''
+    def next_field(self, instance):
+        """Если текст логина введён в нужном формате, фокус сменяется на пароль"""
+        logger.info('Смена фокуса с логина на пароль')
+        if self.text_login.focus == True:
+            self.text_passrd.focus = True
+   
     def show_password(self, instance):
+        '''Скрыть/показать пароль'''
         if self.text_passrd.password == True:
             self.text_passrd.password = False
             instance.icon = "eye-off-outline"
@@ -273,37 +266,37 @@ class MainApp(MDApp):
             self.text_passrd.password = True
             instance.icon = "eye-outline"
 
-    '''Авторизация'''
     def on_confirm(self, instance):
+        '''Авторизация'''
 
-        """В случае успеха"""
         @mainthread
         def success(req, result):
+            """В случае успеха"""
             logger.info(f'Сервер подтвердил запрос')
-            # self.info = Info_client_url(url=self.url, login=self.text_login.text)
+            self.login_active = self.text_login.text
             self.text_field0.hint_text = self.text_login.text if req._result else "Неверный логин или пароль"
             self.text_passrd.text = ""
             self.text_login.text = ""
             MainApp.access = req._result
             logger.info(f'Процедура авторизации прошла успешно')
 
-        """В случае неудачи"""
         @mainthread
         def on_error(req, error):
+            """В случае неудачи"""
             self.text_field0.hint_text = "Ожидание ответа от сервера..."
             MainApp.access = req._result
             load()
             logger.debug(f'Ошибка авторизации') 
 
-        """Данные на сервер на сервер переданы, но есть проблема"""
         @mainthread
         def failure(req, result):
-            self.text_field0.hint_text = "Введите логин и пароль ещё раз"
+            """Данные на сервер на сервер переданы, но есть проблема"""
+            self.text_field0.hint_text = "Ошибка со стороны сервера"
             MainApp.access = req._result
-            logger.debug(f'Какие-то проблемы') 
+            logger.debug(f'Ошибак со стороны сервера') 
 
-        """Проверка наличия интернета"""
         def is_network_available():
+            """Проверка наличия интернета"""
             logger.info(f'Проверка наличия интернета')
             try:
                 response = requests.head("http://www.google.com")
@@ -312,7 +305,8 @@ class MainApp(MDApp):
             except:
                 return False
 
-        def load():          
+        def load():
+            """Get запрос с данными пользователя осуществляется здесь"""          
             self.url = f'{self.text_ip.text}:{self.text_port.text}' 
             logger.info(f'Попытка отправить запрос на сервер')    
             if is_network_available():
@@ -326,48 +320,16 @@ class MainApp(MDApp):
                 self.text_field0.hint_text = "Нет подключения к сети. Попробуем позже..."
                 Clock.schedule_once(lambda dt: load(), 5) # Повторная попытка через 5 секунд
 
-# from kivy.app import App
-# from kivy.uix.button import Button
+        load()  # Вложеная функции load внутри on_confirm        
 
-
-# class MyApp(App):
-#     def build(self):
-#         self.button = Button(text="Нажми меня")
-#         self.button.bind(on_press=self.on_press)
-#         return self.button
-
-#     async def async_sleep(self):
-#         await asyncio.sleep(3)
-#         print("Прошло 3 секунды!")
-
-#     def on_press(self, instance):
-#         print("Начало ожидания...")
-#         async_start(self.async_sleep())
-        # loop = asyncio.get_event_loop()
-        # loop.run_until_complete(async_runTouchApp(self.asynctime() ,async_lib='asyncio'))
-
-        # asyncio.run(self.main_asynctime())
-
-        load()       
-
-    # async def asynctime(self, n):
-    #     self.text_field0.hint_text = f"Ожидание ответа от сервера{'.'*n}"
-    #     logger.info('!!!')
-    #     await asyncio.sleep(3)
-
-    # async def main_asynctime(self):
-    #     tasks = [self.asynctime(i) for i in range(4)]
-    #     await asyncio.gather(*tasks)
-
-    '''Сброс авторизации'''
     def account_reset(self, instance):
+        '''Сброс авторизации'''
         logger.info('Успешный сброс авторизации')
         self.text_field0.hint_text = "Введите логин и пароль"
         MainApp.access = False
 
-    """Проверка сервера в сети"""
     def on_server(self, instance):
-
+        """Проверка сервера в сети"""
         self.url = f'{self.text_ip.text}:{self.text_port.text}'   
 
         def success(req, result):
@@ -390,12 +352,10 @@ class MainApp(MDApp):
         
         Clock.schedule_once(lambda dt: self.on_server(f'http://{self.url}/hello/'), 5) # Повторная попытка через 5 секунд
     
-    # def return_url(self):
-    #     return c
-
     def to_second_scrn(self, *args):
+        """Смена скрина"""
         if MainApp.access == True:
-            self.screen.set_url(url=self.url, login=self.text_login.text)
+            self.screen.set_url(url=self.url, login=self.login_active)
             self.sm.current = 'Screen'  # Выбор экрана по имени (в данном случае по имени "Second")
             return 0  # Не обязательно
     
