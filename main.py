@@ -22,6 +22,16 @@ import requests
 import logging
 import time
 
+'''Например в main попали кривые коммиты, и мы их запушили в удаленный main. 
+Сначала перемещаем указатель на последний стабильный коммит (до того как все пошло не так) по его хешу
+
+git reset --hard mnf3m
+
+и пушим в удаленный репозитарий (для защищенной ветки main должны быть включены --force пуши иначе пуш не пройдет! 
+Это настройках ветки устанавливается.)
+
+git push --force origin main'''
+
 from Screen import Screen
 
 from ccolor import *
