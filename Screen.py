@@ -272,7 +272,7 @@ class Screen(MDScreen):
     
     def set_url(self, url, login,  *args):
         """Принимает данные пользователя и текущий url"""
-        logger.info(f'Скрин помещения {self.room} принял данные от main скрина')
+        logger.info(f'Скрин помещения {self.room} приняло данные от main скрина')
         self.url = url
         self.login = login
 

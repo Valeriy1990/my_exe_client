@@ -40,25 +40,11 @@ logging.config.dictConfig(logging_config)
 
 logger = logging.getLogger(__name__)
 
-rooms = (i for i  in range(536, 549) if i != 547)
-
-
-
 class MainApp(MDApp):
-    '''Здесь я добавляю главный и второй экраны в менеджер, больше этот класс ничего не делает'''
+    '''Здесь я создаю главный скрин'''
     access = True # Поставить на False
     login_active = 'test_login_in_main'
     
-
-    
-    def __new__(cls, *args, **kwgars):
-        # for room in rooms:
-        instance = super().__new__(cls, *args, **kwgars)
-        # cls.to_scrn_537 = lambda dt: to_scrn()
-        return instance
-    
-
-
     def build(self):
         self.theme_cls.theme_style = "Dark"
         
@@ -194,39 +180,24 @@ class MainApp(MDApp):
         ml = ScrollView(do_scroll_x = False,
                         bar_pos_y = 'left')
 
-        self.sm = MDScreenManager()  # Необходимо создать переменную manager, которая будет собирать экраны и управлять ими
+        self.sm = MDScreenManager()  # Переменная manager, которая будет собирать экраны и управлять ими
         main_screen = MDScreen(name='Main')      
-        
         self.sm.add_widget(main_screen)  # Установка значения имени экрана для менеджера экранов
               
-        for room in rooms:  # Создаём объекты Screen и MDNavigationRailItem
-            self.__dict__[f'screen_{room}'] = Screen(name=f"Screen_{room}", room=room)
-            self.sm.add_widget(self.__getattribute__(f'screen_{room}'))
-            panel.add_widget(MDNavigationRailItem(
+        for room in (i for i  in range(536, 549) if i != 547):  # Создаём объекты Screen и MDNavigationRailItem
+            self.__dict__[f'Screen_{room}'] = Screen(name=f"Screen_{room}", room=room)
+            self.sm.add_widget(self.__getattribute__(f'Screen_{room}'))
+            button = MDNavigationRailItem(
                         text=f"Room {room}",
                         icon="home-circle-outline",
-                        on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
+                        on_press=self.to_scrn,   # Кнопка перехода к другому скрину через функцию to_scrn 
                         badge_icon="exclamation-thick",
                         badge_bg_color=(1, 1, 0, 1),
-                        badge_icon_color=(1, 0, 0, 1)))
-            
-        # panel.add_widget(MDNavigationRailItem(
-        #                 text=f"Room 536",
-        #                 icon="home-circle-outline",
-        #                 on_press=self.to_scrn_536,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
-        #                 badge_icon="exclamation-thick",
-        #                 badge_bg_color=(1, 1, 0, 1),
-        #                 badge_icon_color=(1, 0, 0, 1)))   
+                        badge_icon_color=(1, 0, 0, 1))
+            button.screen_name = f"Screen_{room}"
+            panel.add_widget(button)
         
-        # panel.add_widget(MDNavigationRailItem(
-        #                 text=f"Room 537",
-        #                 icon="home-circle-outline",
-        #                 on_press=self.to_scrn_537,   # Кнопка перехода к другому скрину через функцию to_second_scrn 
-        #                 badge_icon="exclamation-thick",
-        #                 badge_bg_color=(1, 1, 0, 1),
-        #                 badge_icon_color=(1, 0, 0, 1)))
-
-        self.url = f'{self.text_ip.text}:{self.text_port.text}'
+        self.set_url(self.text_ip.text, self.text_port.text)  
 
         ml.add_widget(panel)
         main_screen.add_widget(ml)
@@ -246,9 +217,13 @@ class MainApp(MDApp):
         
         return self.sm  # Тут я возвращаю менедежер, что бы работать с ним
     
+    def set_url(self, ip, port):
+        '''Адрес сервера'''
+        self.url = f'{ip}:{port}' 
+    
     def stop_program(self, instance):
         '''Завершить приложение'''
-        logger.info('Успешный выход из программы. Ты великолепен!!')
+        logger.info('Успешный выход из программы. Ты супер!!')
         App.get_running_app().stop()
 
     def next_field(self, instance):
@@ -290,10 +265,10 @@ class MainApp(MDApp):
 
         @mainthread
         def failure(req, result):
-            """Данные на сервер на сервер переданы, но есть проблема"""
+            """Данные на сервер переданы, но есть проблема"""
             self.text_field0.hint_text = "Ошибка со стороны сервера"
             MainApp.access = req._result
-            logger.debug(f'Ошибак со стороны сервера') 
+            logger.debug(f'Ошибка со стороны сервера') 
 
         def is_network_available():
             """Проверка наличия интернета"""
@@ -306,8 +281,8 @@ class MainApp(MDApp):
                 return False
 
         def load():
-            """Get запрос с данными пользователя осуществляется здесь"""          
-            self.url = f'{self.text_ip.text}:{self.text_port.text}' 
+            """Get запрос с данными пользователя осуществляется здесь"""
+            self.set_url(self.text_ip.text, self.text_port.text)          
             logger.info(f'Попытка отправить запрос на сервер')    
             if is_network_available():
                 logger.error(f'Загрузка на сервер')
@@ -330,7 +305,7 @@ class MainApp(MDApp):
 
     def on_server(self, instance):
         """Проверка сервера в сети"""
-        self.url = f'{self.text_ip.text}:{self.text_port.text}'   
+        self.set_url(self.text_ip.text, self.text_port.text)   
 
         def success(req, result):
             logger.info(f'Сервер прислал ответ: {req._result}')
@@ -351,48 +326,12 @@ class MainApp(MDApp):
                                   on_error=error)
         
         Clock.schedule_once(lambda dt: self.on_server(f'http://{self.url}/hello/'), 5) # Повторная попытка через 5 секунд
-    
-    def to_scrn_536(self, *args):
+
+    def to_scrn(self, instance):
         """Смена скрина"""
         if MainApp.access == True:
-            self.screen_536.set_url(url=self.url, login=self.login_active)
-            self.sm.current = 'Screen_536'  # Выбор экрана по имени (в данном случае по имени "Second")
-            print(MainApp.__dict__)
-            return 0  # Не обязательно
-        
-# def to_scrn(room, *args):
-#     """Смена скрина"""
-#     if MainApp.access == True:
-#         MainApp.__getattribute__(f'screen_{room}').set_url(url=MainApp.url, login=MainApp.login_active)
-#         MainApp.sm.current = f'Screen_{room}'  # Выбор экрана по имени (в данном случае по имени "Second")
-#         return 0  # Не обязательно
-        
-# for room in rooms:  # Создаём объекты Screen и MDNavigationRailItem
-        # MainApp.__dict__[f'to_scrn_537'] = 1
-        
-        
-        
-    # def to_scrn_536(self, *args):
-    #     """Смена скрина"""
-    #     if MainApp.access == True:
-    #         self.screen_536.set_url(url=self.url, login=self.login_active)
-    #         self.sm.current = "Screen_536"  # Выбор экрана по имени (в данном случае по имени "Second")
-    #         return 0  # Не обязательно
-        
-    # def to_scrn_537(self, *args):
-    #     """Смена скрина"""
-    #     if MainApp.access == True:
-    #         self.screen_537.set_url(url=self.url, login=self.login_active)
-    #         self.sm.current = 'Screen_537'  # Выбор экрана по имени (в данном случае по имени "Second")
-    #         return 0  # Не обязательно
-
-# def to_scrn(*args):
-#     """Смена скрина"""
-#     if MainApp.access == True:
-#         logger.info(f'Ты красава')
-#     #     MainApp.__getattribute__(f'screen_{room}').set_url(url=MainApp.url, login=MainApp.login_active)
-#     #     MainApp.sm.current = f'Screen_{room}'  # Выбор экрана по имени (в данном случае по имени "Second")
-#     #     return 0  # Не обязательно
+            self.__getattribute__(instance.screen_name).set_url(url=self.url, login=self.login_active)
+            self.sm.current = instance.screen_name  # Выбор экрана по имени (в данном случае по имени "Second")            
 
 if __name__ == '__main__':
     MainApp().run()
