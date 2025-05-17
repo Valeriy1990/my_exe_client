@@ -331,7 +331,7 @@ class MainApp(MDApp):
         """Смена скрина"""
         if MainApp.access == True:
             self.__getattribute__(instance.screen_name).set_url(url=self.url, login=self.login_active)
-            self.sm.current = instance.screen_name  # Выбор экрана по имени (в данном случае по имени "Second")            
+            self.sm.current = instance.screen_name  # Выбор экрана по имени            
 
 if __name__ == '__main__':
     MainApp().run()
