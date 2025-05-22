@@ -10,19 +10,13 @@ from kivymd.uix.textfield import MDTextField
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.screenmanager import MDScreenManager
 from kivymd.uix.navigationrail import MDNavigationRail, MDNavigationRailItem
-import json
-import cProfile
 
-import asyncio
+import json
 from asyncio import sleep
 import logging.config
 from logging_settings import logging_config
-from environs import Env
-import datetime
-import pickle
 import requests
 import logging
-import time
 
 '''Например в main попали кривые коммиты, и мы их запушили в удаленный main. 
 Сначала перемещаем указатель на последний стабильный коммит (до того как все пошло не так) по его хешу

@@ -12,7 +12,7 @@ from kivy.clock import Clock, mainthread
 import requests
 import pickle
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 import json
 
 from ccolor import *
