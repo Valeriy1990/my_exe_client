@@ -12,7 +12,7 @@ from kivy.clock import Clock, mainthread
 import requests
 import pickle
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 
 from ccolor import *
@@ -109,17 +109,25 @@ class Screen(MDScreen):
                                  orientation="vertical",
                                  reversed=False)
         
-        """Смайл реагирующий на строку прогресса"""
+        """Смайл № 1 реагирующий на строку прогресса"""
         self.checkbox1 = CheckBox(size_hint=(0.1, 0.16), 
                              disabled=True, 
                              state = 'down',
                              background_checkbox_disabled_down="images/()().png",
-                             background_checkbox_disabled_normal="images/Троль.png")          
+                             background_checkbox_disabled_normal="images/Троль.png")     
+
+        """Смайл № 2 реагирующий на строку прогресса"""
+        self.checkbox2 = CheckBox(size_hint=(0.1, 0.16), 
+                             disabled=True, 
+                             state = 'down',
+                             background_checkbox_disabled_down="images/()().png",
+                             background_checkbox_disabled_normal="images/Троль.png")        
 
         layout.add_widget(self.topbar)
         layout.add_widget(content)
         content.add_widget(self.progress)
         content.add_widget(self.checkbox1)
+        content.add_widget(self.checkbox2)
         self.add_widget(self.humidity_text)
         self.add_widget(self.temperature_text)
         self.add_widget(self.error_text)        
@@ -132,15 +140,13 @@ class Screen(MDScreen):
         @mainthread
         def success(req, result):
             """В случае успеха создаётся файл pickle с записью даты в виде строки и выполняется функция checkbox1_state"""
-            global room_536
             logger.info(f'Данные отправленны!!. Result: {result}. Поздравляю!!')
             self.error_text.hint_text = ''
-            # flag = {f"room_{self.room}": str(datetime.now())}
-            # with open('my_exe_client/data_states.pickle', 'wb') as f:
-            #     first = pickle.dumps(flag)
-            #     f.write(first)
-            # logger.info(f'Появился pickle!')
-            # self.checkbox1_state()
+            flag = {f"room_{self.room}": str(datetime.now())}
+            with open('my_exe_client/data_states.pickle', 'wb') as file:
+                file.write(pickle.dumps(flag))
+            logger.info(f'Появился pickle!')
+            self.checkbox_state()
 
         @mainthread
         def failure(req, result):
@@ -183,7 +189,6 @@ class Screen(MDScreen):
                                     on_failure=failure,
                                     on_progress=post_progress,
                                     on_error=on_error)
-            print(data)
         else:
             logger.error(f'Интернета нет')
             self.error_text.hint_text = "Нет подключения к сети. Попробуем позже..."
@@ -193,8 +198,7 @@ class Screen(MDScreen):
         """Подготовка POST запроса на сервер и отправка с помощью асинхронного UrlRequest"""              
         data = {"humidity": self.humidity_text.text, "temperature": self.temperature_text.text, "room": self.room, "login": self.login, "creation_date": str(datetime.now())}
         data = json.dumps(data)  
-        self.load(data)
-
+        self.load(data)      
 
     def on_error_humaditi(self, instance):
         """Валидация параметров ввода влажности и смена фокуса на температуру"""
@@ -247,28 +251,27 @@ class Screen(MDScreen):
             self.temperature_text.helper_text = 'Точка!!!' if ',' in self.temperature_text.helper_text else 'И тут цифры, бро(('
             logger.info(f'Неверный формат данных по температуре')   
 
-    def checkbox1_state(self):
+    def checkbox_state(self):
         '''Реакция смайла на pickle'''
-        pass
-        # global room_536
-        # try:
-        #     with open('my_exe_client/data_states.pickle', 'rb') as f:
-        #         logger.info(f'Считывание pickle!')
-        #         first = f.read()
-        #         flag = pickle.loads(first)
-        #         tap_flag = flag[f"room_{self.room}"]
-        # except FileNotFoundError:
-        #     pass
-        # logger.info(f'Проверка условия для смайла')
-        # if not tap_flag or datetime.fromisoformat(tap_flag).date() != datetime.now().date():
-        #     self.checkbox1.state = 'down'    #  Реакция смайла 
-        # else:
-        #     self.checkbox1.state = 'normal'  #  Реакция смайла 
+        try:
+            with open('my_exe_client/data_states.pickle', 'rb') as file:
+                logger.info(f'Считывание pickle!')
+                flag = pickle.loads(file.read())
+                tap_flag = flag[f"room_{self.room}"]
+            logger.info(f'Проверка условия для смайла')
+            if not tap_flag or datetime.fromisoformat(tap_flag).date() != datetime.now().date():
+                self.checkbox1.state = 'down'    #  Реакция смайла
+                self.checkbox2.state = 'down'  #  Реакция смайла  
+            else:
+                if datetime.fromisoformat(tap_flag).hour > 13:
+                    self.checkbox2.state = 'normal'    #  Реакция смайла 
+                self.checkbox1.state = 'normal'  #  Реакция смайла 
+        except:
+            pass
 
     def to_main_scrn(self, *args):  # Вместе с нажатием кнопки он передает информацию о себе.
         # Чтобы не выдать ошибку, я добавляю в функцию *args
         self.manager.current = 'Main'  # Выбор экрана по имени (в данном случае по имени "Main")
-        return 0
     
     def set_url(self, url, login,  *args):
         """Принимает данные пользователя и текущий url"""

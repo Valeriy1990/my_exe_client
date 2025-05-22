@@ -326,6 +326,7 @@ class MainApp(MDApp):
         """Смена скрина"""
         if MainApp.data['accses']:
             self.__getattribute__(instance.screen_name).set_url(url=MainApp.data['url'], login=MainApp.data['login'])
+            self.__getattribute__(instance.screen_name).checkbox_state()
             self.sm.current = instance.screen_name  # Выбор экрана по имени            
 
     def on_stop(self, instance):
