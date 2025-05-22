@@ -10,7 +10,6 @@ from kivy.network.urlrequest import UrlRequest
 from kivy.clock import Clock, mainthread
 
 import requests
-import pickle
 import logging
 from datetime import datetime
 import json
@@ -27,8 +26,6 @@ class Screen(MDScreen):
     def __init__(self, room, **kwargs):      # на этом экране я делаю все то же самое, что и на главном экране, чтобы иметь возможность переключаться вперед и назад
         super(Screen, self).__init__(**kwargs)
         self.room = str(room)
-        self.url = 'test_url'
-        self.login = 'test_login'
 
         """Основной макет скрина
         Без него topbar спустится вниз"""
@@ -83,7 +80,7 @@ class Screen(MDScreen):
         '''Кнопка отправить данные'''
         self.confirm = MDRectangleFlatButton(text="Отправить",
                                  pos_hint={"center_x": 0.5, "center_y": 0.36},
-                                 disabled=False,
+                                 disabled=True,
                                  on_press=self.on_confirm)
         
         '''Лейбл возврата ошибок'''
@@ -142,10 +139,6 @@ class Screen(MDScreen):
             """В случае успеха создаётся файл pickle с записью даты в виде строки и выполняется функция checkbox1_state"""
             logger.info(f'Данные отправленны!!. Result: {result}. Поздравляю!!')
             self.error_text.hint_text = ''
-            # flag = {f"room_{self.room}": str(datetime.now())}
-            # with open('my_exe_client/data_states.pickle', 'wb') as file:
-            #     file.write(pickle.dumps(flag))
-            # logger.info(f'Появился pickle!')
             self.checkbox_state()
 
         @mainthread
@@ -218,7 +211,6 @@ class Screen(MDScreen):
             if self.humidity_text.focus == True:
                 self.temperature_text.focus = True
             self.humidity_text.flag = True
-            # logger.info(f'{self.url}, {self.login}')
             logger.info(f'Успешная валидация ввода влажности')
         except:
             self.humidity_text.flag = False
@@ -253,21 +245,6 @@ class Screen(MDScreen):
 
     def checkbox_state(self):
         '''Реакция смайлов'''
-        # try:
-        #     with open('my_exe_client/data_states.pickle', 'rb') as file:
-        #         logger.info(f'Считывание состояния смайлов!')
-        #         flag = pickle.loads(file.read())
-        #         tap_flag = flag[f"room_{self.room}"]
-        #     logger.info(f'Проверка условия для смайла')
-            # if not tap_flag or datetime.fromisoformat(tap_flag).date() != datetime.now().date():
-            #     self.checkbox1.state = 'down'    #  Реакция смайла
-            #     self.checkbox2.state = 'down'  #  Реакция смайла  
-            # else:
-            #     if datetime.fromisoformat(tap_flag).hour > 13:
-            #         self.checkbox2.state = 'normal'    #  Реакция смайла 
-            #     self.checkbox1.state = 'normal'  #  Реакция смайла 
-        # except:
-        #     pass
         @mainthread
         def on_success(req, result):
             if datetime.fromisoformat(*result).date() != datetime.now().date():
@@ -286,12 +263,7 @@ class Screen(MDScreen):
         def on_error(req, error):
             logger.info(f"Ошибка: {error}")
 
-            # flag = {f"room_{self.room}": str(datetime.now())}
-            # with open('my_exe_client/data_states.pickle', 'wb') as file:
-            #     file.write(pickle.dumps(flag))
-            # logger.info(f'Появился pickle!')
-
-        req2 = UrlRequest(f'http://192.168.1.33:8066/for_info/?room={self.room}', 
+        req2 = UrlRequest(f'http://{self.url}/for_info/?room={self.room}', 
                           on_success=on_success, 
                             on_failure=failure,
                             on_error=on_error)
@@ -306,15 +278,3 @@ class Screen(MDScreen):
         self.url = url
         self.login = login
         self.checkbox_state()
-
-    # '''Периодическая проверка на пустые поля температуры и влажности'''
-    # def exist():
-    #         # if not self.humidity_text.text or not self.temperature_text.text:
-    #         #     self.confirm.disabled = True
-    #         # if self.temperature_text.text == '':
-    #         #     self.temperature_text.helper_text = ''
-    #         # if self.humidity_text.text == '':
-    #         #     self.humidity_text.helper_text = '' 
-
-    # """Периодическая активация exist"""
-    # Clock.schedule_interval(exist, 1/60)

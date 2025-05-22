@@ -348,11 +348,6 @@ class MainApp(MDApp):
 
     def save(self):
         """Сохранение состояния приложения"""
-        # MainApp.data = {'accses': MainApp.access, 
-        #             'login': self.text_login.text if self.text_login.text else None,
-        #             'password': self.text_passrd.text if self.text_passrd.text else None,
-        #             'url' : self.url,
-        #             'info' : self.text_field0.text}
         logger.info(f'Состояние файла данный: {MainApp.data}') 
         with open('my_exe_client/data_client.json', 'w') as file:
             json.dump(MainApp.data, file)  
