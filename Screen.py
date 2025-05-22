@@ -142,10 +142,10 @@ class Screen(MDScreen):
             """В случае успеха создаётся файл pickle с записью даты в виде строки и выполняется функция checkbox1_state"""
             logger.info(f'Данные отправленны!!. Result: {result}. Поздравляю!!')
             self.error_text.hint_text = ''
-            flag = {f"room_{self.room}": str(datetime.now())}
-            with open('my_exe_client/data_states.pickle', 'wb') as file:
-                file.write(pickle.dumps(flag))
-            logger.info(f'Появился pickle!')
+            # flag = {f"room_{self.room}": str(datetime.now())}
+            # with open('my_exe_client/data_states.pickle', 'wb') as file:
+            #     file.write(pickle.dumps(flag))
+            # logger.info(f'Появился pickle!')
             self.checkbox_state()
 
         @mainthread
@@ -160,8 +160,7 @@ class Screen(MDScreen):
             logger.info(f"Ошибка: {error}")
             self.error_text.hint_text = 'Нет связи с сервером'
             Clock.schedule_once(lambda dt: self.load(data), 5) # Повторная попытка через 5 секунд
-
-        
+       
         def post_progress(req, current_size, total_size):
             '''Полоса прогресса'''
             #  current_size текущий размер
@@ -175,6 +174,7 @@ class Screen(MDScreen):
             try:
                 response = requests.head("http://www.google.com")
                 logger.info(f'Интернет есть')
+                self.checkbox_state()
                 return response.status_code == 200
             except:
                 return False
@@ -183,7 +183,7 @@ class Screen(MDScreen):
         if is_network_available():
             self.error_text.hint_text = 'Идёт загрузка...'
             logger.info(f'Загрузка на сервер')
-            req = UrlRequest(f'http://192.168.1.33:8066/setdata/', 
+            req = UrlRequest(f'http://{self.url}/setdata/', 
                                     req_body=data, 
                                     on_success=success, 
                                     on_failure=failure,
@@ -252,22 +252,49 @@ class Screen(MDScreen):
             logger.info(f'Неверный формат данных по температуре')   
 
     def checkbox_state(self):
-        '''Реакция смайла на pickle'''
-        try:
-            with open('my_exe_client/data_states.pickle', 'rb') as file:
-                logger.info(f'Считывание pickle!')
-                flag = pickle.loads(file.read())
-                tap_flag = flag[f"room_{self.room}"]
-            logger.info(f'Проверка условия для смайла')
-            if not tap_flag or datetime.fromisoformat(tap_flag).date() != datetime.now().date():
+        '''Реакция смайлов'''
+        # try:
+        #     with open('my_exe_client/data_states.pickle', 'rb') as file:
+        #         logger.info(f'Считывание состояния смайлов!')
+        #         flag = pickle.loads(file.read())
+        #         tap_flag = flag[f"room_{self.room}"]
+        #     logger.info(f'Проверка условия для смайла')
+            # if not tap_flag or datetime.fromisoformat(tap_flag).date() != datetime.now().date():
+            #     self.checkbox1.state = 'down'    #  Реакция смайла
+            #     self.checkbox2.state = 'down'  #  Реакция смайла  
+            # else:
+            #     if datetime.fromisoformat(tap_flag).hour > 13:
+            #         self.checkbox2.state = 'normal'    #  Реакция смайла 
+            #     self.checkbox1.state = 'normal'  #  Реакция смайла 
+        # except:
+        #     pass
+        @mainthread
+        def on_success(req, result):
+            if datetime.fromisoformat(*result).date() != datetime.now().date():
                 self.checkbox1.state = 'down'    #  Реакция смайла
                 self.checkbox2.state = 'down'  #  Реакция смайла  
             else:
-                if datetime.fromisoformat(tap_flag).hour > 13:
+                if datetime.fromisoformat(*result).hour > 13:
                     self.checkbox2.state = 'normal'    #  Реакция смайла 
-                self.checkbox1.state = 'normal'  #  Реакция смайла 
-        except:
-            pass
+                self.checkbox1.state = 'normal'  #  Реакция смайла             
+
+        @mainthread
+        def failure(req, result):
+            logger.info(f'Данные обработаны. Но есть нюанс: {result}')
+
+        @mainthread
+        def on_error(req, error):
+            logger.info(f"Ошибка: {error}")
+
+            # flag = {f"room_{self.room}": str(datetime.now())}
+            # with open('my_exe_client/data_states.pickle', 'wb') as file:
+            #     file.write(pickle.dumps(flag))
+            # logger.info(f'Появился pickle!')
+
+        req2 = UrlRequest(f'http://192.168.1.33:8066/for_info/?room={self.room}', 
+                          on_success=on_success, 
+                            on_failure=failure,
+                            on_error=on_error)
 
     def to_main_scrn(self, *args):  # Вместе с нажатием кнопки он передает информацию о себе.
         # Чтобы не выдать ошибку, я добавляю в функцию *args
@@ -278,6 +305,7 @@ class Screen(MDScreen):
         logger.info(f'Скрин помещения {self.room} приняло данные от main скрина')
         self.url = url
         self.login = login
+        self.checkbox_state()
 
     # '''Периодическая проверка на пустые поля температуры и влажности'''
     # def exist():

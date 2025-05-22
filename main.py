@@ -1,7 +1,6 @@
 from kivy.app import App
 from kivymd.app import MDApp
 from kivy.clock import Clock, mainthread
-from kivy.app import async_runTouchApp
 from kivy.uix.scrollview import ScrollView
 from kivy.network.urlrequest import UrlRequest
 from kivymd.uix.button import MDRectangleFlatButton, MDIconButton, MDFloatingActionButton
@@ -12,7 +11,6 @@ from kivymd.uix.screenmanager import MDScreenManager
 from kivymd.uix.navigationrail import MDNavigationRail, MDNavigationRailItem
 
 import json
-from asyncio import sleep
 import logging.config
 from logging_settings import logging_config
 import requests
@@ -204,6 +202,9 @@ class MainApp(MDApp):
         main_screen.add_widget(eye_outline)
         main_screen.add_widget(main_layout)
         
+        if MainApp.data['accses']:
+            self.on_server()
+
         return self.sm  # Тут я возвращаю менедежер, что бы работать с ним
     
     def next_field(self, instance):
@@ -320,7 +321,7 @@ class MainApp(MDApp):
         """Смена скрина"""
         if MainApp.data['accses']:
             self.__getattribute__(instance.screen_name).set_url(url=MainApp.data['url'], login=MainApp.data['login'])
-            self.__getattribute__(instance.screen_name).checkbox_state()
+            # self.__getattribute__(instance.screen_name).checkbox_state()
             self.sm.current = instance.screen_name  # Выбор экрана по имени            
 
     def on_stop(self, instance):
