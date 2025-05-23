@@ -188,6 +188,7 @@ class MainApp(MDApp):
                         icon="home-circle-outline",
                         on_press=self.to_scrn,   # Кнопка перехода к другому скрину через функцию to_scrn 
                         badge_icon="exclamation-thick",
+                        # badge_icon="",
                         badge_bg_color=(1, 1, 0, 1),
                         badge_icon_color=(1, 0, 0, 1))
             button.screen_name = f"Screen_{room}"
@@ -336,8 +337,8 @@ class MainApp(MDApp):
     def to_scrn(self, instance):
         """Смена скрина"""
         if MainApp.data['accses']:
+            instance.badge_icon=""
             self.__getattribute__(instance.screen_name).set_url(url=MainApp.data['url'], login=MainApp.data['login'])
-            # self.__getattribute__(instance.screen_name).checkbox_state()
             self.sm.current = instance.screen_name  # Выбор экрана по имени            
 
     def on_stop(self, instance):
