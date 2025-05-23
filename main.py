@@ -191,6 +191,11 @@ class MainApp(MDApp):
                         # badge_icon="",
                         badge_bg_color=(1, 1, 0, 1),
                         badge_icon_color=(1, 0, 0, 1))
+            # try:
+            #     if MainApp.data[f'Screen_{room}']:
+            #         button.badge_icon=''
+            # except:
+            #     pass
             button.screen_name = f"Screen_{room}"
             panel.add_widget(button)
             # try:

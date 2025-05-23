@@ -26,6 +26,7 @@ class Screen(MDScreen):
     def __init__(self, room, **kwargs):      # на этом экране я делаю все то же самое, что и на главном экране, чтобы иметь возможность переключаться вперед и назад
         super(Screen, self).__init__(**kwargs)
         self.room = str(room)
+        self.flag_for_main = False
 
         """Основной макет скрина
         Без него topbar спустится вниз"""
@@ -255,6 +256,7 @@ class Screen(MDScreen):
             else:
                 if datetime.fromisoformat(*result).hour > 13:
                     self.checkbox2.state = 'normal'    #  Реакция смайла 
+                    # self.flag_for_main = True
                     # self.__getattribute__(f'Screen_{self.room}').badge_icon=""
                 self.checkbox1.state = 'normal'  #  Реакция смайла             
 
