@@ -14,6 +14,7 @@ import logging
 from datetime import datetime
 import json
 
+
 from ccolor import *
 
 logger = logging.getLogger(__name__)
@@ -259,7 +260,7 @@ class Screen(MDScreen):
                     # self.flag_for_main = True
                     # self.__getattribute__(f'Screen_{self.room}').badge_icon=""
                 self.checkbox1.state = 'normal'  #  Реакция смайла             
-
+                self.manager.__dict__[f'Screen_{self.room}'] = True
         @mainthread
         def failure(req, result):
             logger.info(f'Данные обработаны. Но есть нюанс: {result}')
@@ -280,7 +281,8 @@ class Screen(MDScreen):
     def to_main_scrn(self, *args):  # Вместе с нажатием кнопки он передает информацию о себе.
         # Чтобы не выдать ошибку, я добавляю в функцию *args
         self.manager.current = 'Main'  # Выбор экрана по имени (в данном случае по имени "Main")
-        self.manager.__dict__[f'Screen_{self.room}'] = True
+        
+
     
     def set_url(self, url, login,  *args):
         """Принимает данные пользователя и текущий url"""
