@@ -280,6 +280,7 @@ class Screen(MDScreen):
     def to_main_scrn(self, *args):  # Вместе с нажатием кнопки он передает информацию о себе.
         # Чтобы не выдать ошибку, я добавляю в функцию *args
         self.manager.current = 'Main'  # Выбор экрана по имени (в данном случае по имени "Main")
+        self.manager.__dict__[f'Screen_{self.room}'] = True
     
     def set_url(self, url, login,  *args):
         """Принимает данные пользователя и текущий url"""

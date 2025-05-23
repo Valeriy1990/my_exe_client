@@ -38,6 +38,7 @@ logger = logging.getLogger(__name__)
 class MainApp(MDApp):
     '''Здесь я создаю главный скрин'''
     rooms = tuple(i for i  in range(536, 549) if i != 547)
+    buttons = []
     
     def build(self):
         self.theme_cls.theme_style = "Dark"
@@ -183,6 +184,8 @@ class MainApp(MDApp):
         for room in MainApp.rooms:  # Создаём объекты Screen и MDNavigationRailItem
             self.__dict__[f'Screen_{room}'] = Screen(name=f"Screen_{room}", room=room)
             self.sm.add_widget(self.__getattribute__(f'Screen_{room}'))
+            self.sm.__dict__[f'Screen_{room}'] = False
+            # MainApp.data[f"Screen_{room}_flag"] = True
             button = MDNavigationRailItem(
                         text=f"Room {room}",
                         icon="home-circle-outline",
@@ -191,6 +194,7 @@ class MainApp(MDApp):
                         # badge_icon="",
                         badge_bg_color=(1, 1, 0, 1),
                         badge_icon_color=(1, 0, 0, 1))
+            MainApp.buttons.append(button)
             # try:
             #     if MainApp.data[f'Screen_{room}']:
             #         button.badge_icon=''
@@ -203,7 +207,8 @@ class MainApp(MDApp):
             #         button.badge_icon=''
             # except:
             #     pass
-        panel.add_widget(MDNavigationRailItem(icon='menu-open'))  # чтобы панели по дефолту не включались
+        panel.add_widget(MDNavigationRailItem(icon='menu-open',
+                                              on_press=self.room_state))  # чтобы панели по дефолту не включались
         
         ml.add_widget(panel)
         main_screen.add_widget(ml)
@@ -252,6 +257,10 @@ class MainApp(MDApp):
                 self.save()
                 self.on_server()
                 self.text_field0.hint_text = MainApp.data['info']
+
+                for room in MainApp.rooms:  
+                    self.checkbox_state(self.__getattribute__(f'Screen_{room}'))
+
             else:
                 self.text_field0.hint_text = "Неверный логин или пароль"
             self.text_passrd.text = ""
@@ -318,7 +327,7 @@ class MainApp(MDApp):
         def success(req, result):
             logger.info(f'Сервер прислал ответ: {req._result}')
             self.text_server.hint_text = 'Cервер на связи'
-
+            self.room_state()
             # for room in MainApp.rooms:
             #     print(self.__getattribute__(f'Screen_{room}'))
             #     self.__getattribute__(f'Screen_{room}')..badge_icon=''
@@ -331,19 +340,27 @@ class MainApp(MDApp):
             logger.error(result)
             self.text_server.hint_text = 'Нет связи с сервером'
 
+        
+
         logger.info(f'Проверка наличия сервера в сети')
-        response = UrlRequest(f'http://{MainApp.data['url']}/hello/', 
+        response = UrlRequest(f"http://{MainApp.data['url']}/hello/", 
                                   on_success=success, 
                                   on_failure=failur, 
                                   on_error=error)
         
-        Clock.schedule_once(lambda dt: self.on_server(f'http://{MainApp.data['url']}/hello/'), 5) # Повторная попытка через 5 секунд
+        Clock.schedule_once(lambda dt: self.on_server(f"http://{MainApp.data['url']}/hello/"), 5) # Повторная попытка через 5 секунд
+
+
 
     def to_scrn(self, instance):
         """Смена скрина"""
         if MainApp.data['accses']:
-            instance.badge_icon=""
             self.__getattribute__(instance.screen_name).set_url(url=MainApp.data['url'], login=MainApp.data['login'])
+            # print([i.screen_name for i in MainApp.buttons])
+            self.room_state()
+            # for room in MainApp.rooms:  
+            #     if self.sm.__dict__[f'Screen_{room}']:
+            #     #     MainApp.data[f"Screen_{room}_flag"] = True
             self.sm.current = instance.screen_name  # Выбор экрана по имени            
 
     def on_stop(self, instance):
@@ -374,26 +391,12 @@ class MainApp(MDApp):
         with open('my_exe_client/data_client.json', 'w') as file:
             json.dump(MainApp.data, file)  
 
-    # def exclamation_thick_state(self, room):
-    #     '''Реакция смайлов'''
-        
-    #     @mainthread
-    #     def on_success(req, result):
-    #         if datetime.fromisoformat(*result).hour > 13:
-    #             self.__getattribute__(f'Screen_{room}').badge_icon=""         
-
-    #     @mainthread
-    #     def failure(req, result):
-    #         logger.info(f'Данные обработаны. Но есть нюанс: {result}')
-
-    #     @mainthread
-    #     def on_error(req, error):
-    #         logger.info(f"Ошибка: {error}")
-
-    #     req2 = UrlRequest(f'http://{MainApp.data['url']}/for_info/?room={room}', 
-    #                       on_success=on_success, 
-    #                         on_failure=failure,
-    #                         on_error=on_error)
+    def room_state(self, instance=None):
+        '''Для восклицаткльных знаков'''
+        logger.info('Ты супер!!')
+        for but in MainApp.buttons:
+            if self.sm.__dict__[but.screen_name]:
+                but.badge_icon=''
 
 if __name__ == '__main__':
     try:
