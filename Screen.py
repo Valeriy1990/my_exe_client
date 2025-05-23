@@ -36,12 +36,13 @@ class Screen(MDScreen):
                                 adaptive_width=False)
 
         '''Создание панели инструментов в классе Screen'''
-        self.topbar = MDTopAppBar(title=f"№ {self.room} 'Входной материальный шлюз'",
+        self.topbar = MDTopAppBar(title=f"№ {self.room}",
                              left_action_items=[["home", self.to_main_scrn]])
                    
         '''Лейбл для ввода влажности'''
         self.humidity_text = MDTextField(size_hint=(0.4, None),
                                  pos_hint={"center_x": 0.5, "center_y": 0.62},
+                                 size_hint_x=0.6,
                                  mode="rectangle",
                                  hint_text="Влажность",
                                  hint_text_color_normal = blue,
@@ -61,6 +62,7 @@ class Screen(MDScreen):
         '''Лейбл для ввода температуры'''
         self.temperature_text = MDTextField(size_hint=(0.4, None),
                                  pos_hint={"center_x": 0.5, "center_y": 0.49},
+                                 size_hint_x=0.6,
                                  mode="rectangle",
                                  hint_text="Температура",
                                  hint_text_color_normal = blue,
@@ -253,6 +255,7 @@ class Screen(MDScreen):
             else:
                 if datetime.fromisoformat(*result).hour > 13:
                     self.checkbox2.state = 'normal'    #  Реакция смайла 
+                    # self.__getattribute__(f'Screen_{self.room}').badge_icon=""
                 self.checkbox1.state = 'normal'  #  Реакция смайла             
 
         @mainthread
@@ -267,6 +270,10 @@ class Screen(MDScreen):
                           on_success=on_success, 
                             on_failure=failure,
                             on_error=on_error)
+        
+        # if self.checkbox2.state == 'normal':
+        #     return True
+        # return False
 
     def to_main_scrn(self, *args):  # Вместе с нажатием кнопки он передает информацию о себе.
         # Чтобы не выдать ошибку, я добавляю в функцию *args

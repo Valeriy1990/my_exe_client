@@ -15,6 +15,7 @@ import logging.config
 from logging_settings import logging_config
 import requests
 import logging
+from datetime import datetime
 
 '''Например в main попали кривые коммиты, и мы их запушили в удаленный main. 
 Сначала перемещаем указатель на последний стабильный коммит (до того как все пошло не так) по его хешу
@@ -36,6 +37,7 @@ logger = logging.getLogger(__name__)
 
 class MainApp(MDApp):
     '''Здесь я создаю главный скрин'''
+    rooms = tuple(i for i  in range(536, 549) if i != 547)
     
     def build(self):
         self.theme_cls.theme_style = "Dark"
@@ -47,12 +49,15 @@ class MainApp(MDApp):
                                     text="Account Reset"),               
                                     md_bg_color=(0.4, 0.4, 0.4, 1),
                                     current_selected_item=-1,
-                                    size_hint = (None, None))
-        panel.height = 17 * 56 + 20
+                                    elevation=4,
+                                    shadow_color=(0.6, 0.6, 1, 1),
+                                    size_hint = (None, len(MainApp.rooms) * 0.135))
+        # panel.height = 17 * 56 + 20
     
         '''Лейбл логин'''
         self.text_login = MDTextField(size_hint=(0.4, None),
-                                 pos_hint={"center_x": 0.5, "center_y": 0.8},
+                                 pos_hint={"center_x": 0.6, "center_y": 0.8},
+                                 size_hint_x=0.6,
                                  mode="rectangle",
                                  hint_text="Login",
                                  hint_text_color_normal = blue,
@@ -70,7 +75,8 @@ class MainApp(MDApp):
         
         '''Лейбл пароль'''
         self.text_passrd = MDTextField(size_hint=(0.4, None),
-                                  pos_hint={"center_x": 0.5, "center_y": 0.68},
+                                  pos_hint={"center_x": 0.6, "center_y": 0.68},
+                                  size_hint_x=0.6,
                                   mode="rectangle",
                                   hint_text="Password",
                                   icon_left="lock-outline",
@@ -83,7 +89,7 @@ class MainApp(MDApp):
 
         '''Текст состояния авторизации'''
         self.text_field0 = MDTextField(size_hint=(0.4, None),
-                                 pos_hint={"center_x": 0.35, "center_y": 0.93},
+                                 pos_hint={"center_x": 0.45, "center_y": 0.93},
                                  mode="line",
                                  hint_text=MainApp.data['info'],
                                  text = '',
@@ -119,8 +125,8 @@ class MainApp(MDApp):
 
         '''Лейбл ввода IP'''
         self.text_ip = MDTextField(size_hint=(0.4, None),
-                                 pos_hint={"center_x": 0.9, "center_y": 0.4},
-                                 size_hint_x=0.15,
+                                 pos_hint={"center_x": 0.7, "center_y": 0.4},
+                                 size_hint_x=0.3,
                                  mode="line",
                                  hint_text="Введите IP",
                                  hint_text_color_normal = my_color,
@@ -135,8 +141,8 @@ class MainApp(MDApp):
         
         '''Лейбл для порта'''
         self.text_port = MDTextField(size_hint=(0.4, None),
-                                 pos_hint={"center_x": 0.9, "center_y": 0.3},
-                                 size_hint_x=0.15,
+                                 pos_hint={"center_x": 0.7, "center_y": 0.3},
+                                 size_hint_x=0.3,
                                  mode="line",
                                  hint_text="Введите порт",
                                  hint_text_color_normal = my_color,
@@ -155,7 +161,7 @@ class MainApp(MDApp):
                                       icon_color=(1, 1, 1, 1),
                                       on_press=self.on_stop,
                                     #   on_press=self.on_start,
-                                      pos_hint={"center_x": 0.15, "center_y": 0.08})
+                                      pos_hint={"center_x": 0.85, "center_y": 0.08})
 
         '''Создание пустого макета, не привязанного к экрану'''
         main_layout = MDBoxLayout(orientation="vertical")   
@@ -163,17 +169,18 @@ class MainApp(MDApp):
         '''Значок глаза на лейбл пароль'''
         eye_outline = MDIconButton(icon="eye-outline",
                                     on_press=self.show_password,
-                                    pos_hint={"center_x": 0.67, "center_y": 0.67})
+                                    pos_hint={"center_x": 0.82, "center_y": 0.67})
 
         '''Ролик на боковую панель'''
         ml = ScrollView(do_scroll_x = False,
-                        bar_pos_y = 'left')
+                        bar_pos_y = 'left',
+                        effect_cls = 'ScrollEffect')
 
         self.sm = MDScreenManager()  # Переменная manager, которая будет собирать экраны и управлять ими
         main_screen = MDScreen(name='Main')      
         self.sm.add_widget(main_screen)  # Установка значения имени экрана для менеджера экранов
               
-        for room in (i for i  in range(536, 549) if i != 547):  # Создаём объекты Screen и MDNavigationRailItem
+        for room in MainApp.rooms:  # Создаём объекты Screen и MDNavigationRailItem
             self.__dict__[f'Screen_{room}'] = Screen(name=f"Screen_{room}", room=room)
             self.sm.add_widget(self.__getattribute__(f'Screen_{room}'))
             button = MDNavigationRailItem(
@@ -185,7 +192,12 @@ class MainApp(MDApp):
                         badge_icon_color=(1, 0, 0, 1))
             button.screen_name = f"Screen_{room}"
             panel.add_widget(button)
-        panel.add_widget(MDNavigationRailItem())  # чтобы панели по дефолту не включались
+            # try:
+            #     if self.__getattribute__(f'Screen_{room}').checkbox_state():
+            #         button.badge_icon=''
+            # except:
+            #     pass
+        panel.add_widget(MDNavigationRailItem(icon='menu-open'))  # чтобы панели по дефолту не включались
         
         ml.add_widget(panel)
         main_screen.add_widget(ml)
@@ -301,6 +313,10 @@ class MainApp(MDApp):
             logger.info(f'Сервер прислал ответ: {req._result}')
             self.text_server.hint_text = 'Cервер на связи'
 
+            # for room in MainApp.rooms:
+            #     print(self.__getattribute__(f'Screen_{room}'))
+            #     self.__getattribute__(f'Screen_{room}')..badge_icon=''
+
         def failur(req, result):
             logger.info(f'Сервер прислал ответ: {req._result}')
             self.text_server.hint_text = 'Cервер на связи'
@@ -334,7 +350,7 @@ class MainApp(MDApp):
 
     # def on_start(self):
     #     logger.info('Функция on_start')
-    #     self.profile = cProfile.Profile()
+    #     self.profile = cProfile.Profile()s
     #     self.profile.enable()
         
     def on_pause(self):
@@ -352,6 +368,26 @@ class MainApp(MDApp):
         with open('my_exe_client/data_client.json', 'w') as file:
             json.dump(MainApp.data, file)  
 
+    # def exclamation_thick_state(self, room):
+    #     '''Реакция смайлов'''
+        
+    #     @mainthread
+    #     def on_success(req, result):
+    #         if datetime.fromisoformat(*result).hour > 13:
+    #             self.__getattribute__(f'Screen_{room}').badge_icon=""         
+
+    #     @mainthread
+    #     def failure(req, result):
+    #         logger.info(f'Данные обработаны. Но есть нюанс: {result}')
+
+    #     @mainthread
+    #     def on_error(req, error):
+    #         logger.info(f"Ошибка: {error}")
+
+    #     req2 = UrlRequest(f'http://{MainApp.data['url']}/for_info/?room={room}', 
+    #                       on_success=on_success, 
+    #                         on_failure=failure,
+    #                         on_error=on_error)
 
 if __name__ == '__main__':
     try:
