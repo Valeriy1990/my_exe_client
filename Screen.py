@@ -148,7 +148,7 @@ class Screen(MDScreen):
         @mainthread
         def failure(req, result):
             """Данные на сервер переданы, но есть проблема"""
-            logger.info(f'Данные обработаны. Но есть нюанс: {result}')
+            logger.info(f'Данные обработаны. Результат: {result}')
             self.error_text.hint_text = 'Ошибка со стороны сервера.'
 
         @mainthread
@@ -220,7 +220,7 @@ class Screen(MDScreen):
             self.humidity_text.flag = False
             self.humidity_text.error = True
             self.humidity_text.text_validate_unfocus = False
-            self.humidity_text.helper_text = 'Через точку, бро((' if ',' in self.humidity_text.helper_text else 'Цифры, бро(('
+            self.humidity_text.helper_text = 'Запишите данные через точку' if ',' in self.humidity_text.helper_text else 'Строчные символы не допускаются'
             logger.info(f'Неверный формат данных по влажности')                
 
     def on_error_temperature(self, instance):
@@ -240,12 +240,12 @@ class Screen(MDScreen):
                     self.temperature_text.error = True     
                 logger.info(f'Успешная валидация ввода температуры')
             else:
-                self.temperature_text.helper_text = 'Чё там по влажности?' 
-        except:
+                self.temperature_text.helper_text = 'Некорректно введены данные по влажности' 
+        except Exception as e:
             self.confirm.disabled = True
             self.temperature_text.error = True
-            self.temperature_text.helper_text = 'Точка!!!' if ',' in self.temperature_text.helper_text else 'И тут цифры, бро(('
-            logger.info(f'Неверный формат данных по температуре')   
+            self.temperature_text.helper_text = 'Запишите данные через точку' if ',' in self.temperature_text.helper_text else 'Строчные символы не допускаются'
+            logger.info(f'Ошибка: {e}')   
 
     def checkbox_state(self):
         '''Реакция смайлов'''
@@ -257,13 +257,11 @@ class Screen(MDScreen):
             else:
                 if datetime.fromisoformat(*result).hour > 13:
                     self.checkbox2.state = 'normal'    #  Реакция смайла 
-                    # self.flag_for_main = True
-                    # self.__getattribute__(f'Screen_{self.room}').badge_icon=""
                 self.checkbox1.state = 'normal'  #  Реакция смайла             
                 self.manager.__dict__[f'Screen_{self.room}'] = True
         @mainthread
         def failure(req, result):
-            logger.info(f'Данные обработаны. Но есть нюанс: {result}')
+            logger.info(f'Данные обработаны. Результат: {result}')
 
         @mainthread
         def on_error(req, error):
@@ -273,17 +271,10 @@ class Screen(MDScreen):
                           on_success=on_success, 
                             on_failure=failure,
                             on_error=on_error)
-        
-        # if self.checkbox2.state == 'normal':
-        #     return True
-        # return False
 
-    def to_main_scrn(self, *args):  # Вместе с нажатием кнопки он передает информацию о себе.
-        # Чтобы не выдать ошибку, я добавляю в функцию *args
+    def to_main_scrn(self, *args): # Чтобы не выдать ошибку, я добавляю в функцию *args
         self.manager.current = 'Main'  # Выбор экрана по имени (в данном случае по имени "Main")
-        
-
-    
+           
     def set_url(self, url, login,  *args):
         """Принимает данные пользователя и текущий url"""
         logger.info(f'Скрин помещения {self.room} приняло данные от main скрина')

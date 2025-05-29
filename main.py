@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 
 class MainApp(MDApp):
     '''Здесь я создаю главный скрин'''
-    rooms = tuple(i for i  in range(536, 549) if i != 547)
+    rooms = (i for i  in range(536, 549) if i != 547)
     buttons = []
     
     def build(self):
@@ -52,8 +52,7 @@ class MainApp(MDApp):
                                     current_selected_item=-1,
                                     elevation=4,
                                     shadow_color=(0.6, 0.6, 1, 1),
-                                    size_hint = (None, len(MainApp.rooms) * 0.135))
-        # panel.height = 17 * 56 + 20
+                                    size_hint = (None, 15 * 0.1))
     
         '''Лейбл логин'''
         self.text_login = MDTextField(size_hint=(0.4, None),
@@ -137,7 +136,6 @@ class MainApp(MDApp):
                                  base_direction="ltr",
                                  cursor_blink=True,
                                  text=MainApp.data['url'][:-5] if MainApp.data['url'] else '',
-                                #  text='192.168.1.33',
                                  icon_left="")
         
         '''Лейбл для порта'''
@@ -153,7 +151,6 @@ class MainApp(MDApp):
                                  base_direction="ltr",
                                  cursor_blink=True,
                                  text=MainApp.data['url'][-4:] if MainApp.data['url'] else '',
-                                #  text='8066',
                                  icon_left="")
 
         '''Кнопка выхода из приложения'''
@@ -161,7 +158,6 @@ class MainApp(MDApp):
                                       md_bg_color = (0, 1, 0.7, 0.7),
                                       icon_color=(1, 1, 1, 1),
                                       on_press=self.on_stop,
-                                    #   on_press=self.on_start,
                                       pos_hint={"center_x": 0.85, "center_y": 0.08})
 
         '''Создание пустого макета, не привязанного к экрану'''
@@ -185,28 +181,16 @@ class MainApp(MDApp):
             self.__dict__[f'Screen_{room}'] = Screen(name=f"Screen_{room}", room=room)
             self.sm.add_widget(self.__getattribute__(f'Screen_{room}'))
             self.sm.__dict__[f'Screen_{room}'] = False
-            # MainApp.data[f"Screen_{room}_flag"] = True
             button = MDNavigationRailItem(
                         text=f"Room {room}",
                         icon="home-circle-outline",
                         on_press=self.to_scrn,   # Кнопка перехода к другому скрину через функцию to_scrn 
                         badge_icon="exclamation-thick",
-                        # badge_icon="",
                         badge_bg_color=(1, 1, 0, 1),
                         badge_icon_color=(1, 0, 0, 1))
             MainApp.buttons.append(button)
-            # try:
-            #     if MainApp.data[f'Screen_{room}']:
-            #         button.badge_icon=''
-            # except:
-            #     pass
             button.screen_name = f"Screen_{room}"
             panel.add_widget(button)
-            # try:
-            #     if self.__getattribute__(f'Screen_{room}').checkbox_state():
-            #         button.badge_icon=''
-            # except:
-            #     pass
         panel.add_widget(MDNavigationRailItem(icon='menu-open',
                                               on_press=self.room_state))  # чтобы панели по дефолту не включались
         
@@ -225,9 +209,6 @@ class MainApp(MDApp):
         main_screen.add_widget(eye_outline)
         main_screen.add_widget(main_layout)
         
-        if MainApp.data['accses']:
-            self.on_server()
-
         return self.sm  # Тут я возвращаю менедежер, что бы работать с ним
     
     def next_field(self, instance):
@@ -289,16 +270,16 @@ class MainApp(MDApp):
                 response = requests.head("http://www.google.com")
                 logger.info(f'Интернет есть')
                 return response.status_code == 200
-            except:
+            except Exception as e:
+                logger.error(f'Произошла ошибка: {e}')
                 return False
 
         def load():
-            """Get запрос с данными пользователя осуществляется здесь"""
-            # self.set_url(self.text_ip.text, self.text_port.text)          
+            """Get запрос с данными пользователя осуществляется здесь"""       
             logger.info(f'Попытка отправить запрос на сервер')    
             if is_network_available():
                 logger.error(f'Загрузка на сервер')
-                req = UrlRequest(url=f'http://{MainApp.data['url']}/avt/?login={MainApp.data['login']}&password={MainApp.data['password']}', 
+                req = UrlRequest(url=f'http://{MainApp.data["url"]}/avt/?login={MainApp.data["login"]}&password={MainApp.data["password"]}', 
                                     on_success=success, 
                                     on_failure=failure,
                                     on_error=on_error)
@@ -322,27 +303,22 @@ class MainApp(MDApp):
 
     def on_server(self, instance=None):
         """Проверка сервера в сети"""
-        # self.set_url(self.text_ip.text, self.text_port.text)   
 
         def success(req, result):
-            logger.info(f'Сервер прислал ответ: {req._result}')
+            # logger.info(f'Сервер прислал ответ: {req._result}')
             self.text_server.hint_text = 'Cервер на связи'
             self.room_state()
-            # for room in MainApp.rooms:
-            #     print(self.__getattribute__(f'Screen_{room}'))
-            #     self.__getattribute__(f'Screen_{room}')..badge_icon=''
 
         def failur(req, result):
             logger.info(f'Сервер прислал ответ: {req._result}')
             self.text_server.hint_text = 'Cервер на связи'
 
         def error(req, result):
-            logger.error(result)
+            # logger.error(result)
             self.text_server.hint_text = 'Нет связи с сервером'
+       
 
-        
-
-        logger.info(f'Проверка наличия сервера в сети')
+        # logger.info(f'Проверка наличия сервера в сети')
         response = UrlRequest(f"http://{MainApp.data['url']}/hello/", 
                                   on_success=success, 
                                   on_failure=failur, 
@@ -350,31 +326,17 @@ class MainApp(MDApp):
         
         Clock.schedule_once(lambda dt: self.on_server(f"http://{MainApp.data['url']}/hello/"), 5) # Повторная попытка через 5 секунд
 
-
-
     def to_scrn(self, instance):
         """Смена скрина"""
         if MainApp.data['accses']:
             self.__getattribute__(instance.screen_name).set_url(url=MainApp.data['url'], login=MainApp.data['login'])
-            # print([i.screen_name for i in MainApp.buttons])
-            self.room_state()
-            # for room in MainApp.rooms:  
-            #     if self.sm.__dict__[f'Screen_{room}']:
-            #     #     MainApp.data[f"Screen_{room}_flag"] = True
             self.sm.current = instance.screen_name  # Выбор экрана по имени            
 
     def on_stop(self, instance):
         '''Завершить приложение'''
-        logger.info('Успешный выход из программы. Ты супер!!')
-        # self.profile.disable()
-        # self.profile.dump_stats('my_exe_client/myapp.profile')
-        # self.save()
+        logger.info('Успешный выход из программы.')
         App.get_running_app().stop()
 
-    # def on_start(self):
-    #     logger.info('Функция on_start')
-    #     self.profile = cProfile.Profile()s
-    #     self.profile.enable()
         
     def on_pause(self):
        """Здесь вы можете сохранить данные, если это необходимо"""
@@ -385,15 +347,24 @@ class MainApp(MDApp):
        # Здесь вы можете проверить, нужно ли заменить какие-либо данные (обычно ничего не нужно)
        pass
 
+    def on_start(self):
+        if MainApp.data['accses']:
+            self.on_server()
+        return super().on_start()
+
     def save(self):
         """Сохранение состояния приложения"""
-        logger.info(f'Состояние файла данный: {MainApp.data}') 
+        logger.info(f'Состояние файла данных: {MainApp.data}') 
         with open('my_exe_client/data_client.json', 'w') as file:
             json.dump(MainApp.data, file)  
 
+    def val_state(self):
+        for room in MainApp.rooms:
+            self.__getattribute__(f'Screen_{room}').set_url(url=MainApp.data['url'], login=MainApp.data['login'])
+            self.__getattribute__(f'Screen_{room}').checkbox_state()
+
     def room_state(self, instance=None):
         '''Для восклицаткльных знаков'''
-        logger.info('Ты супер!!')
         for but in MainApp.buttons:
             if self.sm.__dict__[but.screen_name]:
                 but.badge_icon=''
