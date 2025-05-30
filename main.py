@@ -192,7 +192,7 @@ class MainApp(MDApp):
             button.screen_name = f"Screen_{room}"
             panel.add_widget(button)
         panel.add_widget(MDNavigationRailItem(icon='menu-open',
-                                              on_press=self.room_state))  # чтобы панели по дефолту не включались
+                                              on_press=self.val_state))  # чтобы панели по дефолту не включались
         
         ml.add_widget(panel)
         main_screen.add_widget(ml)
@@ -208,6 +208,7 @@ class MainApp(MDApp):
         main_screen.add_widget(exit_button)
         main_screen.add_widget(eye_outline)
         main_screen.add_widget(main_layout)
+
         
         return self.sm  # Тут я возвращаю менедежер, что бы работать с ним
     
@@ -238,9 +239,6 @@ class MainApp(MDApp):
                 self.save()
                 self.on_server()
                 self.text_field0.hint_text = MainApp.data['info']
-
-                for room in MainApp.rooms:  
-                    self.checkbox_state(self.__getattribute__(f'Screen_{room}'))
 
             else:
                 self.text_field0.hint_text = "Неверный логин или пароль"
@@ -336,8 +334,7 @@ class MainApp(MDApp):
         '''Завершить приложение'''
         logger.info('Успешный выход из программы.')
         App.get_running_app().stop()
-
-        
+     
     def on_pause(self):
        """Здесь вы можете сохранить данные, если это необходимо"""
        self.save()
@@ -358,14 +355,16 @@ class MainApp(MDApp):
         with open('my_exe_client/data_client.json', 'w') as file:
             json.dump(MainApp.data, file)  
 
-    def val_state(self):
-        for room in MainApp.rooms:
-            self.__getattribute__(f'Screen_{room}').set_url(url=MainApp.data['url'], login=MainApp.data['login'])
-            self.__getattribute__(f'Screen_{room}').checkbox_state()
+    def val_state(self, instance=None):
+        '''Обновление данных по скринам для восклицательных знаков'''
+        if MainApp.data['accses']:
+            for but in MainApp.buttons:
+                self.__getattribute__(but.screen_name).set_url(url=MainApp.data['url'], login=MainApp.data['login'])
+                self.__getattribute__(but.screen_name).checkbox_state()
 
     def room_state(self, instance=None):
         '''Для восклицаткльных знаков'''
-        for but in MainApp.buttons:
+        for but in MainApp.buttons:    
             if self.sm.__dict__[but.screen_name]:
                 but.badge_icon=''
 
