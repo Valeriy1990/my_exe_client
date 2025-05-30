@@ -252,14 +252,15 @@ class Screen(MDScreen):
         @mainthread
         def on_success(req, result):
             logger.info(f'Данные обработаны. Результат: {result}')
-            if datetime.fromisoformat(*result).date() != datetime.now().date():
-                self.checkbox1.state = 'down'    #  Реакция смайла
-                self.checkbox2.state = 'down'  #  Реакция смайла  
-            else:
-                if datetime.fromisoformat(*result).hour > 13:
-                    self.checkbox2.state = 'normal'    #  Реакция смайла 
-                self.checkbox1.state = 'normal'  #  Реакция смайла             
-                self.manager.__dict__[f'Screen_{self.room}'] = True
+            if result:
+                if datetime.fromisoformat(*result).date() != datetime.now().date():
+                    self.checkbox1.state = 'down'    #  Реакция смайла
+                    self.checkbox2.state = 'down'  #  Реакция смайла  
+                else:
+                    if datetime.fromisoformat(*result).hour > 13:
+                        self.checkbox2.state = 'normal'    #  Реакция смайла 
+                    self.checkbox1.state = 'normal'  #  Реакция смайла             
+                    self.manager.__dict__[f'Screen_{self.room}'] = True
         @mainthread
         def failure(req, result):
             logger.info(f'Данные обработаны. Результат: {result}')
