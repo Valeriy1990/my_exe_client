@@ -110,19 +110,19 @@ class Screen(MDScreen):
                                  orientation="vertical",
                                  reversed=False)
         
-        """Смайл № 1 реагирующий на строку прогресса"""
+        """Галочка № 1 реагирующий на строку прогресса"""
         self.checkbox1 = CheckBox(size_hint=(0.1, 0.16), 
                              disabled=True, 
                              state = 'down',
-                             background_checkbox_disabled_down="images/()().png",
-                             background_checkbox_disabled_normal="images/Троль.png")     
+                             background_checkbox_disabled_down="images/Крестик.png",
+                             background_checkbox_disabled_normal="images/Галочка.png")     
 
-        """Смайл № 2 реагирующий на строку прогресса"""
+        """Галочка № 2 реагирующий на строку прогресса"""
         self.checkbox2 = CheckBox(size_hint=(0.1, 0.16), 
                              disabled=True, 
                              state = 'down',
-                             background_checkbox_disabled_down="images/()().png",
-                             background_checkbox_disabled_normal="images/Троль.png")        
+                             background_checkbox_disabled_down="images/Крестик.png",
+                             background_checkbox_disabled_normal="images/Галочка.png")        
 
         layout.add_widget(self.topbar)
         layout.add_widget(content)

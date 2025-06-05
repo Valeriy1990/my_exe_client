@@ -1,8 +1,5 @@
 import sys
 
-from log_filters import CriticalLogFilter, DebugWarningLogFilter, ErrorLogFilter
-
-
 logging_config = {
     'version': 1,
     'disable_existing_loggers': True,
