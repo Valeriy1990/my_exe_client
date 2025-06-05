@@ -193,7 +193,10 @@ class Screen(MDScreen):
 
     def on_confirm(self, instance):
         """Подготовка POST запроса на сервер и отправка с помощью асинхронного UrlRequest"""              
-        data = {"humidity": self.humidity_text.text, "temperature": self.temperature_text.text, "room": self.room, "login": self.login, "creation_date": str(datetime.now())}
+        data = {"humidity": self.humidity_text.text, 
+                "temperature": self.temperature_text.text, 
+                "room": self.room, "login": self.login, 
+                "creation_date": str(datetime.now())}
         data = json.dumps(data)  
         self.load(data)      
 
@@ -257,7 +260,7 @@ class Screen(MDScreen):
                     self.checkbox1.state = 'down'    #  Реакция смайла
                     self.checkbox2.state = 'down'  #  Реакция смайла  
                 else:
-                    if datetime.fromisoformat(*result).hour > 13:
+                    if datetime.fromisoformat(*result).hour >= 13:
                         self.checkbox2.state = 'normal'    #  Реакция смайла 
                     self.checkbox1.state = 'normal'  #  Реакция смайла             
                     self.manager.__dict__[f'Screen_{self.room}'] = True

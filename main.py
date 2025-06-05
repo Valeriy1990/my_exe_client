@@ -252,31 +252,28 @@ class MainApp(MDApp):
             self.text_field0.hint_text = "Ожидание ответа от сервера..."
             MainApp.data['accses'] = req._result
             load()
-            logger.debug(f'Сервер не отвечает') 
+            logger.info(f'Сервер не отвечает') 
 
         @mainthread
         def failure(req, result):
             """Данные на сервер переданы, но есть проблема"""
             self.text_field0.hint_text = "Ошибка со стороны сервера"
             MainApp.data['accses'] = req._result
-            logger.debug(f'Ошибка со стороны сервера') 
+            logger.info(f'Ошибка со стороны сервера') 
 
         def is_network_available():
             """Проверка наличия интернета"""
-            logger.info(f'Проверка наличия интернета')
             try:
                 response = requests.head("http://www.google.com")
-                logger.info(f'Интернет есть')
+                logger.info(f'Проверка наличия интернета. Код: {response.status_code}')
                 return response.status_code == 200
             except Exception as e:
                 logger.error(f'Произошла ошибка: {e}')
                 return False
 
         def load():
-            """Get запрос с данными пользователя осуществляется здесь"""       
-            logger.info(f'Попытка отправить запрос на сервер')    
+            """Get запрос с данными пользователя осуществляется здесь"""          
             if is_network_available():
-                logger.error(f'Загрузка на сервер')
                 req = UrlRequest(url=f'http://{MainApp.data["url"]}/avt/?login={MainApp.data["login"]}&password={MainApp.data["password"]}', 
                                     on_success=success, 
                                     on_failure=failure,
@@ -380,4 +377,4 @@ if __name__ == '__main__':
                     'info' : 'Введите логин и пароль'}
     logger.info(f'Состояние файла данный: {MainApp.data}')  
     MainApp().run()
-
+ 
