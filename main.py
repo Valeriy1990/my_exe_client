@@ -237,6 +237,7 @@ class MainApp(MDApp):
             if req._result:
                 MainApp.data['accses'] = req._result
                 self.save()
+                self.val_state()
                 self.on_server()
                 self.text_field0.hint_text = MainApp.data['info']
 
@@ -294,7 +295,11 @@ class MainApp(MDApp):
         '''Сброс авторизации'''
         logger.info('Успешный сброс авторизации')
         self.text_field0.hint_text = "Введите логин и пароль"
-        MainApp.access = False
+        MainApp.data = {'accses': False, 
+                    'login': '',
+                    'password': '',
+                    'url' : None,
+                    'info' : 'Введите логин и пароль'}
 
     def on_server(self, instance=None):
         """Проверка сервера в сети"""
@@ -330,6 +335,7 @@ class MainApp(MDApp):
     def on_stop(self, instance):
         '''Завершить приложение'''
         logger.info('Успешный выход из программы.')
+        self.save()
         App.get_running_app().stop()
      
     def on_pause(self):
