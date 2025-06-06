@@ -24,7 +24,7 @@ logger.propagate = False  # Что бы логи root не дублировал�
 class Screen(MDScreen):
     '''здесь я создаю второй экран с именем Screen'''
         
-    def __init__(self, room, **kwargs):      # на этом экране я делаю все то же самое, что и на главном экране, чтобы иметь возможность переключаться вперед и назад
+    def __init__(self, room, **kwargs):      
         super(Screen, self).__init__(**kwargs)
         self.room = str(room)
         self.flag_for_main = False
@@ -262,8 +262,11 @@ class Screen(MDScreen):
                 else:
                     if datetime.fromisoformat(*result).hour >= 13:
                         self.checkbox2.state = 'normal'    #  Реакция смайла 
-                    self.checkbox1.state = 'normal'  #  Реакция смайла             
-                    self.manager.__dict__[f'Screen_{self.room}'] = True
+                        self.manager.__dict__[f'Screen_{self.room}'] = (True, False)
+                    else:
+                        self.checkbox1.state = 'normal'  #  Реакция смайла             
+                        self.manager.__dict__[f'Screen_{self.room}'] = (True, True)
+
         @mainthread
         def failure(req, result):
             logger.info(f'Данные обработаны. Результат: {result}')

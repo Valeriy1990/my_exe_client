@@ -180,7 +180,7 @@ class MainApp(MDApp):
         for room in MainApp.rooms:  # Создаём объекты Screen и MDNavigationRailItem
             self.__dict__[f'Screen_{room}'] = Screen(name=f"Screen_{room}", room=room)
             self.sm.add_widget(self.__getattribute__(f'Screen_{room}'))
-            self.sm.__dict__[f'Screen_{room}'] = False
+            self.sm.__dict__[f'Screen_{room}'] = (False, False)
             button = MDNavigationRailItem(
                         text=f"Room {room}",
                         icon="home-circle-outline",
@@ -237,7 +237,6 @@ class MainApp(MDApp):
             if req._result:
                 MainApp.data['accses'] = req._result
                 self.save()
-                self.val_state()
                 self.on_server()
                 self.text_field0.hint_text = MainApp.data['info']
 
@@ -307,6 +306,7 @@ class MainApp(MDApp):
         def success(req, result):
             # logger.info(f'Сервер прислал ответ: {req._result}')
             self.text_server.hint_text = 'Cервер на связи'
+            self.val_state()
             self.room_state()
 
         def failur(req, result):
@@ -368,7 +368,7 @@ class MainApp(MDApp):
     def room_state(self, instance=None):
         '''Для восклицаткльных знаков'''
         for but in MainApp.buttons:    
-            if self.sm.__dict__[but.screen_name]:
+            if self.sm.__dict__[but.screen_name][datetime.now().hour >= 13]:
                 but.badge_icon=''
 
 if __name__ == '__main__':
