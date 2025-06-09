@@ -255,7 +255,7 @@ class Screen(MDScreen):
         @mainthread
         def on_success(req, result):
             logger.info(f'Данные обработаны. Результат: {result}')
-            if result:
+            if result: # Возможно избыточная условность
                 if datetime.fromisoformat(*result).date() != datetime.now().date():
                     self.checkbox1.state = 'down'    #  Реакция смайла
                     self.checkbox2.state = 'down'  #  Реакция смайла  
