@@ -260,7 +260,7 @@ class Screen(MDScreen):
                     self.checkbox1.state = 'down'    #  Реакция смайла
                     self.checkbox2.state = 'down'  #  Реакция смайла  
                 else:
-                    if datetime.fromisoformat(*result).hour >= 13:
+                    if datetime.fromisoformat(*result).hour <= 13:
                         self.checkbox2.state = 'normal'    #  Реакция смайла 
                         self.manager.__dict__[f'Screen_{self.room}'] = (True, False)
                     else:
