@@ -17,44 +17,37 @@ import requests
 import logging
 from datetime import datetime
 
-'''Например в main попали кривые коммиты, и мы их запушили в удаленный main. 
-Сначала перемещаем указатель на последний стабильный коммит (до того как все пошло не так) по его хешу
-
-git reset --hard mnf3m
-
-и пушим в удаленный репозитарий (для защищенной ветки main должны быть включены --force пуши иначе пуш не пройдет! 
-Это настройках ветки устанавливается.)
-
-git push --force origin main'''
+#git reset --hard mnf3m
+#git push --force origin main'''
 
 from Screen import Screen
 from ccolor import *
 
 # Загружаем настройки логирования из словаря `logging_config`
 logging.config.dictConfig(logging_config)
-
 logger = logging.getLogger(__name__)
 
 class MainApp(MDApp):
     '''Здесь я создаю главный скрин'''
-    rooms = (i for i  in range(536, 549) if i != 547)
-    buttons = []
+    rooms = (i for i  in range(536, 549) if i != 547)  # Генератор содержащий все необходимые помещения
+    buttons = []  # Пустой список для кнопок
     
     def build(self):
+        """Метод содержит все графические компоненты"""
         self.theme_cls.theme_style = "Dark"
         
-        '''Панель с помещениями'''
+        '''Панель для помещений. Помещения будут добавленны потом'''
         panel = MDNavigationRail(    
                     MDNavigationRailItem(icon="account-cancel",
                                     on_press=self.account_reset,
-                                    text="Account Reset"),               
+                                    text="Reset"),               
                                     md_bg_color=(0.4, 0.4, 0.4, 1),
                                     current_selected_item=-1,
                                     elevation=4,
                                     shadow_color=(0.6, 0.6, 1, 1),
-                                    size_hint = (None, 15 * 0.1))
+                                    size_hint = (None, 15 * 0.09))  # Не смог автоматизировать длинну панели с помещениями. Подобрал(
     
-        '''Лейбл логин'''
+        '''Окно логин'''
         self.text_login = MDTextField(size_hint=(0.4, None),
                                  pos_hint={"center_x": 0.6, "center_y": 0.8},
                                  size_hint_x=0.6,
@@ -73,7 +66,7 @@ class MainApp(MDApp):
                                  on_text_validate=self.next_field,
                                  fill_color_normal=green)
         
-        '''Лейбл пароль'''
+        '''Окно пароль'''
         self.text_passrd = MDTextField(size_hint=(0.4, None),
                                   pos_hint={"center_x": 0.6, "center_y": 0.68},
                                   size_hint_x=0.6,
@@ -87,7 +80,7 @@ class MainApp(MDApp):
                                   password=True,
                                   password_mask="X")
 
-        '''Текст состояния авторизации'''
+        '''Окно состояния авторизации'''
         self.text_field0 = MDTextField(size_hint=(0.4, None),
                                  pos_hint={"center_x": 0.45, "center_y": 0.93},
                                  mode="line",
@@ -103,12 +96,12 @@ class MainApp(MDApp):
                                  icon_left="account-cowboy-hat",
                                  readonly=True)
 
-        """Кнопка 'продолжить' после логина и пароля"""
+        """Кнопка 'продолжить'"""
         confirm = MDRectangleFlatButton(text="Продолжить",
                                     on_press=self.on_confirm,
                                     pos_hint={"center_x": 0.5, "center_y": 0.2})
 
-        '''Лейбл связи с сервером'''
+        '''Окно связи с сервером'''
         self.text_server = MDTextField(size_hint=(0.4, None),
                                  pos_hint={"center_x": 0.5, "center_y": 0.1},
                                  mode="line",
@@ -123,7 +116,7 @@ class MainApp(MDApp):
                                  icon_left="",
                                  readonly=True)
 
-        '''Лейбл ввода IP'''
+        '''Окно ввода IP'''
         self.text_ip = MDTextField(size_hint=(0.4, None),
                                  pos_hint={"center_x": 0.7, "center_y": 0.4},
                                  size_hint_x=0.3,
@@ -135,10 +128,10 @@ class MainApp(MDApp):
                                  allow_copy=False,
                                  base_direction="ltr",
                                  cursor_blink=True,
-                                 text=MainApp.data['url'][:-5] if MainApp.data['url'] else '',
+                                 text=MainApp.data['url'][:-5] if MainApp.data['url'] else '',  # Если в файле JSON 'url' : None, то строка пустая. Иначе url
                                  icon_left="")
         
-        '''Лейбл для порта'''
+        '''Окно ввода порта'''
         self.text_port = MDTextField(size_hint=(0.4, None),
                                  pos_hint={"center_x": 0.7, "center_y": 0.3},
                                  size_hint_x=0.3,
@@ -150,7 +143,7 @@ class MainApp(MDApp):
                                  allow_copy=False,
                                  base_direction="ltr",
                                  cursor_blink=True,
-                                 text=MainApp.data['url'][-4:] if MainApp.data['url'] else '',
+                                 text=MainApp.data['url'][-4:] if MainApp.data['url'] else '',  # Если в файле JSON 'url' : None, то строка пустая. Иначе port
                                  icon_left="")
 
         '''Кнопка выхода из приложения'''
@@ -163,7 +156,7 @@ class MainApp(MDApp):
         '''Создание пустого макета, не привязанного к экрану'''
         main_layout = MDBoxLayout(orientation="vertical")   
 
-        '''Значок глаза на лейбл пароль'''
+        '''Значок глаза на окно пароля'''
         eye_outline = MDIconButton(icon="eye-outline",
                                     on_press=self.show_password,
                                     pos_hint={"center_x": 0.82, "center_y": 0.67})
@@ -174,25 +167,39 @@ class MainApp(MDApp):
                         effect_cls = 'ScrollEffect')
 
         self.sm = MDScreenManager()  # Переменная manager, которая будет собирать экраны и управлять ими
-        main_screen = MDScreen(name='Main')      
-        self.sm.add_widget(main_screen)  # Установка значения имени экрана для менеджера экранов
+        main_screen = MDScreen(name='Main')  # Установка имени для главного экрана
+        self.sm.add_widget(main_screen)  
               
-        for room in MainApp.rooms:  # Создаём объекты Screen и MDNavigationRailItem
+        # room хранится в сакмом классе 
+        for room in MainApp.rooms:  
+            # Создаём объекты экранов для каждого помещения и называем их Screen_<номер помещения>
             self.__dict__[f'Screen_{room}'] = Screen(name=f"Screen_{room}", room=room)
             self.sm.add_widget(self.__getattribute__(f'Screen_{room}'))
-            self.sm.__dict__[f'Screen_{room}'] = (False, False)
+            
+            # Присваиваем каждому экрану кортеж. 
+            # Первый False установит восклицательный знак если данные до 13:00 не загружены. 
+            # Второй False установит восклицательный знак если данные после 13:00 не загружены.
+            # В момента создания кортеж (False, False)
+            self.sm.__dict__[f'Screen_{room}'] = (False, False)  
+            
+            # Создаём объекты MDNavigationRailItem
             button = MDNavigationRailItem(
                         text=f"Room {room}",
                         icon="home-circle-outline",
-                        on_press=self.to_scrn,   # Кнопка перехода к другому скрину через функцию to_scrn 
+                        on_press=self.to_scrn,   # Кнопка перехода к другому экрану через функцию to_scrn 
                         badge_icon="exclamation-thick",
                         badge_bg_color=(1, 1, 0, 1),
                         badge_icon_color=(1, 0, 0, 1))
+            
+            # Добавляем объекты button в список buttons (пустой список хранится в самом классе)
             MainApp.buttons.append(button)
+            # Добавляем объекту button атрибут с названием привязанного к нему экрана для функции to_scrn
             button.screen_name = f"Screen_{room}"
+            
             panel.add_widget(button)
+        # Последняя кнопка в боковую панель
         panel.add_widget(MDNavigationRailItem(icon='menu-open',
-                                              on_press=self.val_state))  # чтобы панели по дефолту не включались
+                                              on_press=self.val_state))  # При старте приложения будет запускаться функция val_state
         
         ml.add_widget(panel)
         main_screen.add_widget(ml)
@@ -210,7 +217,7 @@ class MainApp(MDApp):
         main_screen.add_widget(main_layout)
 
         
-        return self.sm  # Тут я возвращаю менедежер, что бы работать с ним
+        return self.sm  # Dозвращаю менедежер, что бы работать с ним
     
     def next_field(self, instance):
         """Если текст логина введён в нужном формате, фокус сменяется на пароль"""
@@ -234,24 +241,29 @@ class MainApp(MDApp):
         def success(req, result):
             """В случае успеха"""
             logger.info(f'Сервер подтвердил запрос')
-            if req._result:
-                MainApp.data['accses'] = req._result
-                self.save()
-                self.on_server()
-                self.text_field0.hint_text = MainApp.data['info']
+            if req._result:  # Если сервер вернул True
+                # Открываем доступ пользователю
+                MainApp.data['accses'] = req._result  
+                # Сохраняем данные MainApp.data в фаил JSON
+                self.save()  
+                # Активируем функцию on_server. Периодически мониторим связь с сервером для контроля состояния соединения.
+                # Если связь оборвётся, то будет надпись 'Нет связи с сервером'
+                # В противном случае 'Cервер на связи'
+                self.on_server()  
+                self.text_field0.hint_text = MainApp.data['info']  # На экране появится имя пользователя
 
             else:
                 self.text_field0.hint_text = "Неверный логин или пароль"
             self.text_passrd.text = ""
             self.text_login.text = ""
-            logger.info(f'Процедура авторизации прошла успешно')
+            logger.info(f'Отвер сервера обработан')
 
         @mainthread
         def on_error(req, error):
             """В случае неудачи"""
             self.text_field0.hint_text = "Ожидание ответа от сервера..."
-            MainApp.data['accses'] = req._result
-            load()
+            # MainApp.data['accses'] = req._result
+            load()  #  Повторная попытка связаться с сервером
             logger.info(f'Сервер не отвечает') 
 
         @mainthread
@@ -274,21 +286,24 @@ class MainApp(MDApp):
         def load():
             """Get запрос с данными пользователя осуществляется здесь"""          
             if is_network_available():
-                req = UrlRequest(url=f'http://{MainApp.data["url"]}/avt/?login={MainApp.data["login"]}&password={MainApp.data["password"]}', 
+                # Данные берутся из временно сохранённых в MainApp.data
+                # В случае успеха данные сохраняются в JSON
+                req = UrlRequest(url=f'http://{MainApp.data["url"]}/avut/?login={MainApp.data["login"]}&password={MainApp.data["password"]}', 
                                     on_success=success, 
                                     on_failure=failure,
                                     on_error=on_error)
             else:
                 logger.error(f'Интернета нет')
-                self.text_field0.hint_text = "Нет подключения к сети. Попробуем позже..."
+                self.text_field0.hint_text = "Нет подключения к сети..."
                 Clock.schedule_once(lambda dt: load(), 5) # Повторная попытка через 5 секунд
 
+        # Временно сохраняем данные в MainApp.data
         MainApp.data['login'] = self.text_login.text
         MainApp.data['password'] = self.text_passrd.text
         MainApp.data['url'] = f'{self.text_ip.text}:{self.text_port.text}'   
         MainApp.data['info'] = self.text_login.text
 
-        load()  # Вложеная функции load внутри on_confirm        
+        load()  # Вложенная функции load внутри on_confirm        
 
     def account_reset(self, instance):
         '''Сброс авторизации'''
@@ -301,17 +316,19 @@ class MainApp(MDApp):
                     'info' : 'Введите логин и пароль'}
 
     def on_server(self, instance=None):
-        """Проверка сервера в сети"""
+        """Проверка сервера в сети и обновление восклицательных знаков"""
 
         def success(req, result):
             # logger.info(f'Сервер прислал ответ: {req._result}')
             self.text_server.hint_text = 'Cервер на связи'
+            # Обновление галочек экранов 
             self.val_state()
+            # Проверка кортежей экранов для восклицательных знаков
             self.room_state()
 
         def failur(req, result):
             logger.info(f'Сервер прислал ответ: {req._result}')
-            self.text_server.hint_text = 'Cервер на связи'
+            self.text_server.hint_text = 'Ошибка со стороны сервера'
 
         def error(req, result):
             # logger.error(result)
@@ -327,56 +344,68 @@ class MainApp(MDApp):
         Clock.schedule_once(lambda dt: self.on_server(f"http://{MainApp.data['url']}/hello/"), 5) # Повторная попытка через 5 секунд
 
     def to_scrn(self, instance):
-        """Смена скрина"""
-        if MainApp.data['accses']:
+        """Смена экрана"""
+        if MainApp.data['accses']:  # Если есть доступ
+            # Возвращаем атрибут объекта button с названием привязанного к нему экрана
+            # Возвращаемому экрану передаём данные сети и пользователя для передачи данных на сервер с самого экрана
             self.__getattribute__(instance.screen_name).set_url(url=MainApp.data['url'], login=MainApp.data['login'])
             self.sm.current = instance.screen_name  # Выбор экрана по имени            
 
     def on_stop(self, instance):
-        '''Завершить приложение'''
+        '''Завершить приложение и сохранить состояние приложения'''
         logger.info('Успешный выход из программы.')
         self.save()
         App.get_running_app().stop()
      
     def on_pause(self):
-       """Здесь вы можете сохранить данные, если это необходимо"""
+       """Сохранить данные перейдя на паузу"""
        self.save()
        return True
 
-    def on_resume(self):
-       # Здесь вы можете проверить, нужно ли заменить какие-либо данные (обычно ничего не нужно)
-       pass
-
     def on_start(self):
+        # Если из приложении вышел авторизованный пользователь и не сбросил аутентификацию.
+        # Приложение просто будет мониторить состояние связи с сервером
         if MainApp.data['accses']:
             self.on_server()
-        return super().on_start()
+        return super().on_start()  # Базовая реализация метода on_start
 
     def save(self):
-        """Сохранение состояния приложения"""
+        """Сохранение состояния приложения в файл JSON"""
         logger.info(f'Состояние файла данных: {MainApp.data}') 
-        with open('my_exe_client/data_client.json', 'w') as file:
+        with open('data_client.json', 'w') as file:
             json.dump(MainApp.data, file)  
 
     def val_state(self, instance=None):
-        '''Обновление данных по скринам для восклицательных знаков'''
+        '''Обновление данных по помещениям для восклицательных знаков'''
         if MainApp.data['accses']:
             for but in MainApp.buttons:
+                # Возвращаем атрибут объекта button с названием привязанного к нему экрана
+                # Возвращаемому экрану передаём данные сети и пользователя для передачи данных на сервер с самого экрана
                 self.__getattribute__(but.screen_name).set_url(url=MainApp.data['url'], login=MainApp.data['login'])
+                # У возвращаемого экрана обновляется состояние галочек для проверки восклицательных знаков
                 self.__getattribute__(but.screen_name).checkbox_state()
 
     def room_state(self, instance=None):
-        '''Для восклицаткльных знаков'''
+        '''Для восклицательных знаков'''
         for but in MainApp.buttons:    
+            # Проверка кортежа каждого из экранов.
+            # Если кортеж (False, False) то будет восклицательный знак.
+            # Если кортеж (True, False), а время меньше 13:00, то восклицательный знак пропадёт.
+            # Если кортеж (True, False), а время больше 13:00, то восклицательный знак появится.       
+            # Если кортеж (True, True), а время меньше 13:00, то восклицательный знак пропадёт.     
             if self.sm.__dict__[but.screen_name][datetime.now().hour >= 13]:
                 but.badge_icon=''
-
+            else:
+                but.badge_icon="exclamation-thick"
+                
 if __name__ == '__main__':
     try:
-        with open('my_exe_client/data_client.json', 'r') as file:
+        """Проверка наличия файла в директории"""
+        with open('data_client.json', 'r') as file:
             MainApp.data = json.load(file)
     except:
-        MainApp.data = {'accses': False, # Поставить на False
+        """Если файла нет, то настройки по дефолту"""
+        MainApp.data = {'accses': True, # Поставить на False
                     'login': '',
                     'password': '',
                     'url' : None,
